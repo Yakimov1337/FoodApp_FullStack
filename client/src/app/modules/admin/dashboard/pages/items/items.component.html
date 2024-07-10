@@ -1,0 +1,7 @@
+<div class="mx-auto px-4 py-4 sm:px-8 lg:container">
+  <!-- Auctions Table -->
+  <div menuItem-auctions-table ></div>
+  <div *ngIf="showCreateMenuItemModal$ | async" menuItem-create-modal></div>
+  <div *ngIf="showUpdateMenuItemModal$ | async" menuItem-update-modal></div>
+  <div *ngIf="showDeleteMenuItemModal$ | async" menuItem-delete-modal></div>
+</div>

@@ -1,0 +1,7 @@
+<div class="mx-auto px-4 py-4 sm:px-8 lg:container">
+  <!-- Orders Table -->
+  <div orders-table></div>
+  <div *ngIf="showCreateOrderModal$ | async" order-create-modal></div>
+  <div *ngIf="showUpdateOrderModal$ | async" order-update-modal></div>
+  <div *ngIf="showDeleteOrderModal$ | async" order-delete-modal></div>
+</div>

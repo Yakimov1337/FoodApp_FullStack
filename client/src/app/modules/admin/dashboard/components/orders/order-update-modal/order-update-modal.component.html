@@ -1,0 +1,149 @@
+<!-- Main modal -->
+<div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4" (click)="closeModal()">
+  <div class="relative max-h-full w-full max-w-md p-4">
+    <!-- Modal content -->
+    <div class="relative rounded-lg bg-white shadow dark:bg-gray-700" (click)="$event.stopPropagation()">
+      <!-- Modal header -->
+      <div class="flex items-center justify-between rounded-t border-b p-4 dark:border-gray-600 md:p-5">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Update Order</h3>
+        <button
+          type="button"
+          (click)="closeModal()"
+          class="ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+          data-modal-toggle="crud-modal">
+          <svg class="h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+          </svg>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+      <!-- Modal body -->
+      <form class="p-4 md:p-5" [formGroup]="orderForm" (ngSubmit)="updateOrder()">
+        <div class="mb-4 grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <div
+              *ngIf="orderForm.get('user')?.errors?.['required'] && orderForm.get('user')?.touched else emailLabel"
+              class="text-red-500">
+              Email is required
+            </div>
+            <ng-template #emailLabel>
+              <label for="user" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+                >User Email<span class="text-red-500">*</span></label
+              >
+            </ng-template>
+            <select
+              formControlName="user"
+              id="user"
+              class="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400">
+              <option *ngFor="let user of users$ | async" [value]="user.$id">{{ user.email }}</option>
+            </select>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <label for="status" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+              >Status <span class="text-red-500">*</span></label
+            >
+            <select
+              formControlName="status"
+              id="status"
+              class="focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400">
+              <option value="pending">pending</option>
+              <option value="completed">completed</option>
+              <option value="cancelled">cancelled</option>
+            </select>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <label for="createdOn" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+              >Created on<span class="text-red-500">*</span></label
+            >
+            <input
+              formControlName="createdOn"
+              type="date"
+              id="createdOn"
+              [min]="minDate"
+              class="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+              placeholder="Type order date" />
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <div
+              *ngIf="orderForm.get('totalCost')?.errors?.['required'] && orderForm.get('totalCost')?.touched else costValidLabel "
+              class="text-red-500">
+              Total cost is required
+            </div>
+            <ng-template #costValidLabel>
+              <div *ngIf="orderForm.get('totalCost')?.errors?.['pattern'] else costLabel" class="text-red-500">
+                Total cost must be a valid number
+              </div>
+            </ng-template>
+            <ng-template #costLabel>
+              <label for="totalCost" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+                >Total cost<span class="text-red-500">*</span></label
+              >
+            </ng-template>
+            <input
+              formControlName="totalCost"
+              type="tel"
+              id="totalCost"
+              class="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
+              placeholder="Type order total cost" />
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <label for="paid" class="mb-4 block text-sm font-medium text-gray-900 dark:text-white">
+              Paid <span class="text-red-500">*</span>
+            </label>
+            <div class="flex gap-2">
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" class="sr-only" formControlName="paid" [value]="true">
+                <div class="toggle-bg bg-gray-200 border-2 border-gray-200 h-6 w-11 rounded-full"></div>
+                <span class="ml-2 text-gray-900 dark:text-white">Yes</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" class="sr-only" formControlName="paid" [value]="false">
+                <div class="toggle-bg bg-gray-200 border-2 border-gray-200 h-6 w-11 rounded-full"></div>
+                <span class="ml-2 text-gray-900 dark:text-white">No</span>
+              </label>
+            </div>
+          </div>
+          <div class="col-span-2">
+            <button type="button" class="flex items-center mb-2 text-sm font-medium text-gray-700 dark:text-gray-200" (click)="isMenuItemsDropdownOpen = !isMenuItemsDropdownOpen">
+              Ordered Menu Items
+              <svg [ngClass]="{'rotate-180': isMenuItemsDropdownOpen}" class="ml-2 h-4 w-4 transform transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <!-- Dropdown container -->
+            <div *ngIf="isMenuItemsDropdownOpen">
+              <ng-container *ngIf="orderedMenuItemTitles$ | async as orderedTitles">
+                <div *ngIf="orderedTitles.length > 0; else noItemsTemplate" class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                  <ul class="list-disc pl-5">
+                    <li *ngFor="let title of orderedTitles" class="text-gray-900 dark:text-white">{{ title }}</li>
+                  </ul>
+                </div>
+              </ng-container>
+              <ng-template #noItemsTemplate>
+                <div class="border border-gray-200 rounded-lg p-2 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white">
+                  No ordered menu items.
+                </div>
+              </ng-template>
+            </div>
+          </div>
+
+
+
+          <div class="col-span-2">
+            <button
+              type="submit"
+              class="inline-flex items-center rounded-lg bg-primary px-5 py-2.5 text-center text-sm font-medium text-white">
+
+              Update
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

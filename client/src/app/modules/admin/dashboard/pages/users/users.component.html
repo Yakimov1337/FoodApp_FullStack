@@ -1,0 +1,7 @@
+<div class="mx-auto px-4 py-4 sm:px-8 lg:container">
+  <!-- users Table -->
+  <div users-table></div>
+  <div *ngIf="showCreateUserModal$ | async" user-create-modal></div>
+  <div *ngIf="showUpdateUserModal$ | async" user-update-modal></div>
+  <div *ngIf="showDeleteUserModal$ | async" user-delete-modal></div>
+</div>
