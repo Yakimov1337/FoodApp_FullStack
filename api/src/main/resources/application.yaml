@@ -1,0 +1,41 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/foodSquad?allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true&serverTimezone=UTC
+    username: yourUsername
+    password: yourPassword
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        show_sql: true
+    sql:
+      init:
+        mode: always
+  h2:
+    console:
+      enabled: true
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+logging:
+  level:
+    root: info
+    org.springframework.web: debug
+
+security:
+  jwt:
+    secret: yourSecretKey
+    expiration: 86400  # 1 day in seconds
