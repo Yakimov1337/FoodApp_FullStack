@@ -6,6 +6,8 @@ import com.foodsquad.FoodSquad.model.entity.UserRole;
 import com.foodsquad.FoodSquad.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,23 +22,25 @@ public class UserService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public List<UserResponseDTO> getAllUsers() {
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<User> users = userRepository.findAll();
-        return users.stream()
+        List<UserResponseDTO> userDTOs = users.stream()
                 .map(user -> modelMapper.map(user, UserResponseDTO.class))
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(userDTOs);
     }
 
-    public UserResponseDTO getUserById(Long id) {
+    public ResponseEntity<UserResponseDTO> getUserById(Long id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isPresent()) {
-            return modelMapper.map(user.get(), UserResponseDTO.class);
+            UserResponseDTO userDTO = modelMapper.map(user.get(), UserResponseDTO.class);
+            return ResponseEntity.ok(userDTO);
         } else {
-            throw new IllegalArgumentException("User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
-    public UserResponseDTO updateUser(Long id, UserResponseDTO userResponseDTO) {
+    public ResponseEntity<String> updateUser(Long id, UserResponseDTO userResponseDTO) {
         Optional<User> existingUser = userRepository.findById(id);
         if (existingUser.isPresent()) {
             User user = existingUser.get();
@@ -45,20 +49,19 @@ public class UserService {
             user.setRole(UserRole.valueOf(userResponseDTO.getRole()));
             user.setImageUrl(userResponseDTO.getImageUrl());
             user.setPhoneNumber(userResponseDTO.getPhoneNumber());
-            User updatedUser = userRepository.save(user);
-            return modelMapper.map(updatedUser, UserResponseDTO.class);
+            userRepository.save(user);
+            return ResponseEntity.ok("User successfully updated.");
         } else {
-            throw new IllegalArgumentException("User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
         }
     }
 
-    public void deleteUser(Long id) {
+    public ResponseEntity<String> deleteUser(Long id) {
         if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
+            return ResponseEntity.ok("User successfully deleted.");
         } else {
-            throw new IllegalArgumentException("User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
         }
     }
-
 }
-
