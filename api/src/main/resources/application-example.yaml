@@ -10,6 +10,10 @@ spring:
     username: yourUsername
     password: yourPassword
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  flyway:
+    enabled: false # Disable Flyway for now
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,14 +25,23 @@ spring:
     sql:
       init:
         mode: always
+
   h2:
     console:
       enabled: true
+
   devtools:
     restart:
       enabled: true
     livereload:
       enabled: true
+
+  security:
+    user:
+      name: user
+      password: password
+    default:
+      enabled: false
 
 logging:
   level:
@@ -39,3 +52,6 @@ security:
   jwt:
     secret: yourSecretKey
     expiration: 86400  # 1 day in seconds
+springdoc:
+  swagger-ui:
+    tagsSorter: alpha
