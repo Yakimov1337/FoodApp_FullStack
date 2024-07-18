@@ -17,8 +17,10 @@ public class MenuItem {
     @Column(nullable = false)
     private String description;
 
-    private String imageUrl = "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg";
+    @Column(nullable = false)
+    private String imageUrl = "https://www.tastingtable.com/img/gallery/what-makes-restaurant-burgers-taste-different-from-homemade-burgers-upgrade/l-intro-1662064407.jpg";
 
+    @Column(nullable = false)
     private Boolean defaultItem = false;
 
     @Column(nullable = false)
