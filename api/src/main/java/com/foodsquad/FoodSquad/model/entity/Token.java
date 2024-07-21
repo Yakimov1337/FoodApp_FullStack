@@ -4,22 +4,21 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "tokens")
 public class Token {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String token;
 
     @Column(nullable = false)
-    private String username;
-
-    @Column(nullable = false)
-    private boolean isRevoked = false;
-
-    @Column(nullable = false)
     private LocalDateTime expiryDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public Long getId() {
         return id;
@@ -37,22 +36,6 @@ public class Token {
         this.token = token;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public boolean isRevoked() {
-        return isRevoked;
-    }
-
-    public void setRevoked(boolean revoked) {
-        isRevoked = revoked;
-    }
-
     public LocalDateTime getExpiryDate() {
         return expiryDate;
     }
@@ -60,5 +43,12 @@ public class Token {
     public void setExpiryDate(LocalDateTime expiryDate) {
         this.expiryDate = expiryDate;
     }
-}
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+}
