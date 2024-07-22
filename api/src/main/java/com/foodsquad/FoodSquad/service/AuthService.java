@@ -3,22 +3,29 @@ package com.foodsquad.FoodSquad.service;
 import com.foodsquad.FoodSquad.model.dto.UserLoginDTO;
 import com.foodsquad.FoodSquad.model.dto.UserRegistrationDTO;
 import com.foodsquad.FoodSquad.model.dto.UserResponseDTO;
+import com.foodsquad.FoodSquad.model.entity.Token;
 import com.foodsquad.FoodSquad.model.entity.User;
 import com.foodsquad.FoodSquad.model.entity.UserRole;
+import com.foodsquad.FoodSquad.repository.TokenRepository;
 import com.foodsquad.FoodSquad.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-public class AuthService {
+public class AuthService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TokenRepository tokenRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -26,10 +33,17 @@ public class AuthService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public ResponseEntity<String> registerUser(UserRegistrationDTO userRegistrationDTO) {
+    @Override
+    public UserDetails loadUserByUsername(String username) {
+        return userRepository.findByEmail(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    @Transactional
+    public UserResponseDTO registerUser(UserRegistrationDTO userRegistrationDTO) {
         Optional<User> existingUser = userRepository.findByEmail(userRegistrationDTO.getEmail());
         if (existingUser.isPresent()) {
-            return new ResponseEntity<>("Email already exists", HttpStatus.CONFLICT);
+            throw new IllegalArgumentException("Email already exists");
         }
         User user = new User();
         user.setEmail(userRegistrationDTO.getEmail());
@@ -37,18 +51,52 @@ public class AuthService {
         user.setRole(UserRole.NORMAL);
         user.setImageUrl("https://cloud.appwrite.io/v1/storage/buckets/66099552d89fbdfa20d4/files/663f1c48a822caaf325c/view?project=65ef1b8962547e24afec&mode=admin");
 
-        userRepository.save(user);
-        return new ResponseEntity<>("User successfully registered", HttpStatus.CREATED);
+        User savedUser = userRepository.save(user);
+        return modelMapper.map(savedUser, UserResponseDTO.class);
     }
 
-    public ResponseEntity<UserResponseDTO> loginUser(UserLoginDTO userLoginDTO) {
+    @Transactional
+    public UserResponseDTO loginUser(UserLoginDTO userLoginDTO) {
         Optional<User> optionalUser = userRepository.findByEmail(userLoginDTO.getEmail());
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            if (passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword())) {
-                return ResponseEntity.ok(modelMapper.map(user, UserResponseDTO.class));
-            }
+        if (optionalUser.isEmpty()) {
+            throw new IllegalArgumentException("Invalid email or password");
         }
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        User user = optionalUser.get();
+        if (!passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        return modelMapper.map(user, UserResponseDTO.class);
     }
+
+    public boolean isRefreshTokenValid(String username, String refreshToken) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Optional<Token> token = tokenRepository.findByUserAndToken(user, refreshToken);
+        return token.isPresent();
+    }
+
+    @Transactional
+    public void saveRefreshToken(String username, String refreshToken) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        //End all other sessions
+        tokenRepository.deleteByUser(user);
+
+        Token token = new Token();
+        token.setToken(refreshToken);
+        token.setExpiryDate(LocalDateTime.now().plusDays(1));
+        token.setUser(user);
+
+        tokenRepository.save(token);
+    }
+
+    @Transactional
+    public void invalidateRefreshToken(String refreshToken) {
+        tokenRepository.deleteByToken(refreshToken);
+    }
+
 }
