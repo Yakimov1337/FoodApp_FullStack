@@ -33,6 +33,10 @@ public class MenuItem {
     @ManyToMany(mappedBy = "menuItems")
     private List<Order> orders;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     public Long getId() {
         return id;
     }
@@ -95,5 +99,13 @@ public class MenuItem {
 
     public void setOrders(List<Order> orders) {
         this.orders = orders;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
