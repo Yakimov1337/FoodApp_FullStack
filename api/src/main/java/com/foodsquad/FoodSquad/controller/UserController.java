@@ -1,5 +1,6 @@
 package com.foodsquad.FoodSquad.controller;
 
+import com.foodsquad.FoodSquad.model.dto.OrderDTO;
 import com.foodsquad.FoodSquad.model.dto.UserResponseDTO;
 import com.foodsquad.FoodSquad.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,8 +21,8 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        return userService.getAllUsers();
+    public List<UserResponseDTO> getAllUsers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return userService.getAllUsers(page, size);
     }
 
     @GetMapping("/{id}")
