@@ -1,11 +1,16 @@
 package com.foodsquad.FoodSquad.service;
 
+import com.foodsquad.FoodSquad.model.dto.OrderDTO;
 import com.foodsquad.FoodSquad.model.dto.UserResponseDTO;
+import com.foodsquad.FoodSquad.model.entity.Order;
 import com.foodsquad.FoodSquad.model.entity.User;
 import com.foodsquad.FoodSquad.model.entity.UserRole;
 import com.foodsquad.FoodSquad.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,13 +27,14 @@ public class UserService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        List<UserResponseDTO> userDTOs = users.stream()
-                .map(user -> modelMapper.map(user, UserResponseDTO.class))
+    public List<UserResponseDTO> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> userPage = userRepository.findAll(pageable);
+        return userPage.stream()
+                .map(UserResponseDTO::new)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(userDTOs);
     }
+
 
     public ResponseEntity<UserResponseDTO> getUserById(Long id) {
         Optional<User> user = userRepository.findById(id);

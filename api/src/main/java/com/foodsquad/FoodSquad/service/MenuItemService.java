@@ -1,13 +1,18 @@
 package com.foodsquad.FoodSquad.service;
 
 import com.foodsquad.FoodSquad.model.dto.MenuItemDTO;
+import com.foodsquad.FoodSquad.model.dto.OrderDTO;
 import com.foodsquad.FoodSquad.model.entity.MenuItem;
+import com.foodsquad.FoodSquad.model.entity.Order;
 import com.foodsquad.FoodSquad.model.entity.User;
 import com.foodsquad.FoodSquad.model.entity.UserRole;
 import com.foodsquad.FoodSquad.repository.MenuItemRepository;
 import com.foodsquad.FoodSquad.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -62,12 +67,12 @@ public class MenuItemService {
         }
     }
 
-    public ResponseEntity<List<MenuItemDTO>> getAllMenuItems() {
-        List<MenuItem> menuItems = menuItemRepository.findAll();
-        List<MenuItemDTO> menuItemDTOs = menuItems.stream()
-                .map(menuItem -> modelMapper.map(menuItem, MenuItemDTO.class))
+    public List<MenuItemDTO> getAllMenuItems(int page, int limit) {
+        Pageable pageable = PageRequest.of(page, limit);
+        Page<MenuItem> menuItemPage = menuItemRepository.findAll(pageable);
+        return menuItemPage.stream()
+                .map(MenuItemDTO::new)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(menuItemDTOs);
     }
 
     public ResponseEntity<String> updateMenuItem(Long id, MenuItemDTO menuItemDTO) {
