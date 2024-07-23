@@ -31,8 +31,8 @@ public class MenuItemController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MenuItemDTO>> getAllMenuItems() {
-        return menuItemService.getAllMenuItems();
+    public List<MenuItemDTO> getAllMenuItems(@RequestParam(defaultValue = "0")int page, @RequestParam(defaultValue = "20") int limit) {
+        return menuItemService.getAllMenuItems(page, limit);
     }
 
     @PutMapping("/{id}")
