@@ -1,5 +1,7 @@
 package com.foodsquad.FoodSquad.model.dto;
 
+import com.foodsquad.FoodSquad.model.entity.MenuItem;
+import com.foodsquad.FoodSquad.model.entity.MenuItemCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,35 +25,50 @@ public class MenuItemDTO {
     private Boolean defaultItem;
 
     @NotNull(message = "Price cannot be null")
-    @Positive(message = "Total cost must be positive")
+    @Positive(message = "Price must be positive")
     private Double price;
 
     @NotNull(message = "Category cannot be null")
     @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER")
     @Schema(defaultValue = "BURGER")
-    private String category;
+    private MenuItemCategory category;
 
-    public String getTitle() {
+    // Default constructor
+    public MenuItemDTO() {}
+
+    // Constructor to create DTO from MenuItem entity
+    public MenuItemDTO(MenuItem menuItem) {
+        this.title = menuItem.getTitle();
+        this.description = menuItem.getDescription();
+        this.imageUrl = menuItem.getImageUrl();
+        this.defaultItem = menuItem.getDefaultItem();
+        this.price = menuItem.getPrice();
+        this.category = menuItem.getCategory();
+    }
+
+    // getters and setters
+
+    public @NotBlank(message = "Title cannot be blank") String getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
+    public void setTitle(@NotBlank(message = "Title cannot be blank") String title) {
         this.title = title;
     }
 
-    public String getDescription() {
+    public @NotBlank(message = "Description cannot be blank") String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(@NotBlank(message = "Description cannot be blank") String description) {
         this.description = description;
     }
 
-    public String getImageUrl() {
+    public @URL @NotBlank(message = "ImageUrl cannot be blank") String getImageUrl() {
         return imageUrl;
     }
 
-    public void setImageUrl(String imageUrl) {
+    public void setImageUrl(@URL @NotBlank(message = "ImageUrl cannot be blank") String imageUrl) {
         this.imageUrl = imageUrl;
     }
 
@@ -63,19 +80,19 @@ public class MenuItemDTO {
         this.defaultItem = defaultItem;
     }
 
-    public Double getPrice() {
+    public @NotNull(message = "Price cannot be null") @Positive(message = "Price must be positive") Double getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(@NotNull(message = "Price cannot be null") @Positive(message = "Price must be positive") Double price) {
         this.price = price;
     }
 
-    public String getCategory() {
+    public @NotNull(message = "Category cannot be null") @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER") MenuItemCategory getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(@NotNull(message = "Category cannot be null") @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER") MenuItemCategory category) {
         this.category = category;
     }
 }
