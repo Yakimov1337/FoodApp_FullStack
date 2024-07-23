@@ -5,15 +5,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class UserRegistrationDTO {
-    @Email
-    @NotBlank
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
     private String email;
 
-    @NotBlank
-    @Size(min = 6, max = 20)
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, max = 20, message = "Size must be between 6 and 20 characters")
     private String password;
 
-    @NotBlank
+    @NotBlank(message = "Confirm Password is required")
     @Size(min = 6, max = 20)
     private String confirmPassword;
 
