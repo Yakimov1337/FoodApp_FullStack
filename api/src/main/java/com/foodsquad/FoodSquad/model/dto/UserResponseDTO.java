@@ -1,5 +1,9 @@
 package com.foodsquad.FoodSquad.model.dto;
 
+import com.foodsquad.FoodSquad.model.entity.User;
+
+import java.util.List;
+
 public class UserResponseDTO {
     private Long id;
     private String name;
@@ -7,6 +11,19 @@ public class UserResponseDTO {
     private String role;
     private String imageUrl;
     private String phoneNumber;
+
+    public UserResponseDTO() {
+        // Default constructor
+    }
+
+    public UserResponseDTO(User user) {
+        this.id = user.getId();
+        this.name = user.getName();
+        this.email = user.getEmail();
+        this.role = user.getRole().name();
+        this.imageUrl = user.getImageUrl();
+        this.phoneNumber = user.getPhoneNumber();
+    }
 
     public Long getId() {
         return id;
@@ -55,4 +72,5 @@ public class UserResponseDTO {
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
+
 }
