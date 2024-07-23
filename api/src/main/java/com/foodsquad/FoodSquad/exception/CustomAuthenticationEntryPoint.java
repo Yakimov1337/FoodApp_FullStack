@@ -20,7 +20,13 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType("application/json");
 
         Map<String, String> errors = new HashMap<>();
-        errors.put("error", "Authentication failed: " + authException.getMessage());
+        if (request.getAttribute("expired") != null) {
+            errors.put("error", "Token has expired: " + request.getAttribute("expired"));
+        } else if (request.getAttribute("invalid") != null) {
+            errors.put("error", "Invalid token: " + request.getAttribute("invalid"));
+        } else {
+            errors.put("error", "Authentication failed: " + authException.getMessage());
+        }
 
         response.getWriter().write(new ObjectMapper().writeValueAsString(errors));
     }
