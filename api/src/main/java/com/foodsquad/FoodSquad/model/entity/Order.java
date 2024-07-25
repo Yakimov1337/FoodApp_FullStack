@@ -4,13 +4,14 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "orders")
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     @Column(nullable = false)
     private Integer totalCost;
@@ -36,11 +37,11 @@ public class Order {
     @Column(nullable = false)
     private Boolean paid = false;
 
-    public Long getId() {
+    public UUID  getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID  id) {
         this.id = id;
     }
 
