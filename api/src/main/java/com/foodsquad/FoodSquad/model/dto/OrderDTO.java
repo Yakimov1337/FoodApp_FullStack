@@ -11,11 +11,14 @@ import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class OrderDTO {
-    @NotNull(message = "User ID is required")
-    private Long userId;
+    @NotNull(message = "Order ID is required")
+    private UUID id;
+
+    private UserResponseDTO user;
 
     @NotNull(message = "Menu item IDs are required")
     private List<Long> menuItemIds;
@@ -42,8 +45,8 @@ public class OrderDTO {
 
     // Constructor to create DTO from Order entity
     public OrderDTO(Order order) {
-
-        this.userId = order.getUser().getId();
+        this.id = order.getId();
+        this.user = new UserResponseDTO(order.getUser());
         this.menuItemIds = order.getMenuItems().stream().map(MenuItem::getId).collect(Collectors.toList());
         this.status = order.getStatus();
         this.totalCost = order.getTotalCost();
@@ -51,14 +54,21 @@ public class OrderDTO {
         this.paid = order.getPaid();
     }
 
-
-
-    public @NotNull(message = "User ID is required") Long getUserId() {
-        return userId;
+    public UUID getId() {
+        return id;
     }
 
-    public void setUserId(@NotNull(message = "User ID is required") Long userId) {
-        this.userId = userId;
+    public void setId(UUID orderId) {
+        this.id = orderId;
+    }
+
+
+    public UserResponseDTO getUser() {
+        return user;
+    }
+
+    public void setUser(UserResponseDTO user) {
+        this.user = user;
     }
 
     public @NotNull(message = "Menu item IDs are required") List<Long> getMenuItemIds() {

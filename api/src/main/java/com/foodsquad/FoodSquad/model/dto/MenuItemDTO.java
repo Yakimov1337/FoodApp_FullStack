@@ -9,6 +9,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import org.hibernate.validator.constraints.URL;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class MenuItemDTO {
 
     @NotBlank(message = "Title cannot be blank")
@@ -33,6 +36,9 @@ public class MenuItemDTO {
     @Schema(defaultValue = "BURGER")
     private MenuItemCategory category;
 
+
+    private List<OrderDTO> orders;
+
     // Default constructor
     public MenuItemDTO() {}
 
@@ -44,6 +50,7 @@ public class MenuItemDTO {
         this.defaultItem = menuItem.getDefaultItem();
         this.price = menuItem.getPrice();
         this.category = menuItem.getCategory();
+        this.orders = menuItem.getOrders().stream().map(OrderDTO::new).collect(Collectors.toList());
     }
 
     // getters and setters
@@ -94,5 +101,13 @@ public class MenuItemDTO {
 
     public void setCategory(@NotNull(message = "Category cannot be null") @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER") MenuItemCategory category) {
         this.category = category;
+    }
+
+    public List<OrderDTO> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<OrderDTO> orders) {
+        this.orders = orders;
     }
 }
