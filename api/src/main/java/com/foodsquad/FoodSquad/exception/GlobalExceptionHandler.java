@@ -1,5 +1,8 @@
 package com.foodsquad.FoodSquad.exception;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
@@ -53,7 +56,24 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         Map<String, String> errors = new HashMap<>();
-        errors.put("error", "Invalid JSON input");
+        Throwable mostSpecificCause = ex.getMostSpecificCause();
+        String errorMessage = "Invalid JSON input";
+        if (mostSpecificCause instanceof InvalidFormatException) {
+            InvalidFormatException ife = (InvalidFormatException) mostSpecificCause;
+            String fieldName = ife.getPath().stream()
+                    .map(JsonMappingException.Reference::getFieldName)
+                    .findFirst()
+                    .orElse("Unknown field");
+            errorMessage = "Invalid value for field '" + fieldName + "'";
+        } else if (mostSpecificCause instanceof MismatchedInputException) {
+            MismatchedInputException mie = (MismatchedInputException) mostSpecificCause;
+            String fieldName = mie.getPath().stream()
+                    .map(JsonMappingException.Reference::getFieldName)
+                    .findFirst()
+                    .orElse("Unknown field");
+            errorMessage = "Missing or invalid value for field '" + fieldName + "'";
+        }
+        errors.put("error", errorMessage);
         return ResponseEntity.badRequest().body(errors);
     }
 
