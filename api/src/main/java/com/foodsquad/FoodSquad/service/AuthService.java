@@ -48,7 +48,7 @@ public class AuthService implements UserDetailsService {
         User user = new User();
         user.setEmail(userRegistrationDTO.getEmail());
         user.setPassword(passwordEncoder.encode(userRegistrationDTO.getPassword()));
-        user.setRole(UserRole.NORMAL);
+        user.setRole(UserRole.NORMAL); // default value for user register through client form
         user.setImageUrl("https://cloud.appwrite.io/v1/storage/buckets/66099552d89fbdfa20d4/files/663f1c48a822caaf325c/view?project=65ef1b8962547e24afec&mode=admin");
 
         User savedUser = userRepository.save(user);
