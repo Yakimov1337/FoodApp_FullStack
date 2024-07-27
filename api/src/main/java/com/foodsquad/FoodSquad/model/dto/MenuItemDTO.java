@@ -1,18 +1,20 @@
 package com.foodsquad.FoodSquad.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.foodsquad.FoodSquad.model.entity.MenuItem;
 import com.foodsquad.FoodSquad.model.entity.MenuItemCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.URL;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class MenuItemDTO {
+    //allows reading while returning the object only, TODO: create additional MenuItemCreateDTO
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long id;
 
     @NotBlank(message = "Title cannot be blank")
     private String title;
@@ -31,29 +33,36 @@ public class MenuItemDTO {
     @Positive(message = "Price must be positive")
     private Double price;
 
-    @NotNull(message = "Category cannot be null")
-    @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER")
+    @NotNull(message = "Price cannot be null")
+//    @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER")
     @Schema(defaultValue = "BURGER")
     private MenuItemCategory category;
 
-
-    private List<OrderDTO> orders;
+    //allows reading while returning the object only, TODO: create additional MenuItemCreateDTO
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer salesCount;
 
     // Default constructor
-    public MenuItemDTO() {}
+    public MenuItemDTO() {
+    }
 
     // Constructor to create DTO from MenuItem entity
-    public MenuItemDTO(MenuItem menuItem) {
+    public MenuItemDTO(MenuItem menuItem, int salesCount) {
+        this.id = menuItem.getId();
         this.title = menuItem.getTitle();
         this.description = menuItem.getDescription();
         this.imageUrl = menuItem.getImageUrl();
         this.defaultItem = menuItem.getDefaultItem();
         this.price = menuItem.getPrice();
         this.category = menuItem.getCategory();
-        this.orders = menuItem.getOrders().stream().map(OrderDTO::new).collect(Collectors.toList());
+        this.salesCount = salesCount;
     }
 
     // getters and setters
+
+    public Long getId() {
+        return id;
+    }
 
     public @NotBlank(message = "Title cannot be blank") String getTitle() {
         return title;
@@ -95,19 +104,19 @@ public class MenuItemDTO {
         this.price = price;
     }
 
-    public @NotNull(message = "Category cannot be null") @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER") MenuItemCategory getCategory() {
+    public  MenuItemCategory getCategory() {
         return category;
     }
 
-    public void setCategory(@NotNull(message = "Category cannot be null") @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER") MenuItemCategory category) {
+    public void setCategory() {
         this.category = category;
     }
 
-    public List<OrderDTO> getOrders() {
-        return orders;
+    public Integer getSalesCount() {
+        return salesCount;
     }
 
-    public void setOrders(List<OrderDTO> orders) {
-        this.orders = orders;
+    public void setSalesCount(Integer salesCount) {
+        this.salesCount = salesCount;
     }
 }
