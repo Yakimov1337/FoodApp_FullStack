@@ -1,7 +1,6 @@
 package com.foodsquad.FoodSquad.model.entity;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -10,8 +9,9 @@ import java.util.UUID;
 @Table(name = "orders")
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "CHAR(36)")
+    private String id;
 
     @Column(nullable = false)
     private Integer totalCost;
@@ -23,25 +23,27 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime createdOn;
 
+    @Column(nullable = false)
+    private Boolean paid = false;
+
     @ManyToMany
     @JoinTable(
             name = "order_menu_item",
             joinColumns = @JoinColumn(name = "order_id"),
             inverseJoinColumns = @JoinColumn(name = "menu_item_id"))
+    @Column(nullable = false)
     private List<MenuItem> menuItems;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private Boolean paid = false;
 
-    public UUID  getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID  id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -74,6 +76,9 @@ public class Order {
     }
 
     public void setMenuItems(List<MenuItem> menuItems) {
+        if (menuItems == null || menuItems.isEmpty()) {
+            throw new IllegalArgumentException("Order must contain at least one MenuItem");
+        }
         this.menuItems = menuItems;
     }
 
