@@ -46,4 +46,4 @@ testem.log
 Thumbs.db
 .vercel
 # Environment Variables
-src/environments/environment.local.ts
+# src/environments/environment.local.ts
