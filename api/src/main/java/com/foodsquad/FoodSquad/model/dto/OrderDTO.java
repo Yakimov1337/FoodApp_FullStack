@@ -15,10 +15,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class OrderDTO {
-    @NotNull(message = "Order ID is required")
-    private UUID id;
-
-    private UserResponseDTO user;
+    //allows reading while returning the object only, TODO: create additional OrderCreateDTO
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+//    @NotNull(message = "Order ID is required")
+    private String id;
 
     @NotNull(message = "Menu item IDs are required")
     private List<Long> menuItemIds;
@@ -36,40 +36,31 @@ public class OrderDTO {
     @Schema(defaultValue = "false")
     private Boolean paid = false;
 
-    // Default constructor
+    private String userEmail;
+
+    // Public no-argument constructor
     public OrderDTO() {
-        this.status = OrderStatus.PENDING;
-        this.totalCost = 1;
-        this.paid = false;
     }
 
     // Constructor to create DTO from Order entity
-    public OrderDTO(Order order) {
-        this.id = order.getId();
-        this.user = new UserResponseDTO(order.getUser());
-        this.menuItemIds = order.getMenuItems().stream().map(MenuItem::getId).collect(Collectors.toList());
-        this.status = order.getStatus();
-        this.totalCost = order.getTotalCost();
-        this.createdOn = order.getCreatedOn();
-        this.paid = order.getPaid();
+    public OrderDTO(String id, String userEmail, List<Long> menuItemIds, OrderStatus status, Integer totalCost, LocalDateTime createdOn, Boolean paid) {
+        this.id = id;
+        this.userEmail = userEmail;
+        this.menuItemIds = menuItemIds;
+        this.status = status;
+        this.totalCost = totalCost;
+        this.createdOn = createdOn;
+        this.paid = paid;
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID orderId) {
+    public void setId(String orderId) {
         this.id = orderId;
     }
 
-
-    public UserResponseDTO getUser() {
-        return user;
-    }
-
-    public void setUser(UserResponseDTO user) {
-        this.user = user;
-    }
 
     public @NotNull(message = "Menu item IDs are required") List<Long> getMenuItemIds() {
         return menuItemIds;
@@ -79,8 +70,9 @@ public class OrderDTO {
         this.menuItemIds = menuItemIds;
     }
 
-    public @NotNull(message = "Status is required") OrderStatus getStatus() {
-        return status;
+    @JsonProperty("status")
+    public String getStatus() {
+        return status.name().toLowerCase();
     }
 
     public void setStatus(@NotNull(message = "Status is required") OrderStatus status) {
@@ -109,5 +101,13 @@ public class OrderDTO {
 
     public void setPaid(Boolean paid) {
         this.paid = paid;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }
