@@ -30,8 +30,6 @@ public class MenuItem {
     @Column(nullable = false)
     private MenuItemCategory category = MenuItemCategory.BURGER;
 
-    @ManyToMany(mappedBy = "menuItems")
-    private List<Order> orders;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -93,13 +91,6 @@ public class MenuItem {
         this.category = category;
     }
 
-    public List<Order> getOrders() {
-        return orders;
-    }
-
-    public void setOrders(List<Order> orders) {
-        this.orders = orders;
-    }
 
     public User getUser() {
         return user;
