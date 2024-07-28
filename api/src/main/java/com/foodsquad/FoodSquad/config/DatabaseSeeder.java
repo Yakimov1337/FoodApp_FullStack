@@ -1,19 +1,28 @@
 package com.foodsquad.FoodSquad.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodsquad.FoodSquad.model.entity.*;
 import com.foodsquad.FoodSquad.repository.MenuItemRepository;
 import com.foodsquad.FoodSquad.repository.OrderRepository;
 import com.foodsquad.FoodSquad.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class DatabaseSeeder {
+    private final ResourceLoader resourceLoader;
 
     @Autowired
     private UserRepository userRepository;
@@ -26,6 +35,11 @@ public class DatabaseSeeder {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public DatabaseSeeder(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
+    }
 
     @PostConstruct
     public void seedDatabase() {
@@ -62,23 +76,62 @@ public class DatabaseSeeder {
     }
 
     private void seedMenuItems() {
-        User adminUser = userRepository.findByEmail("admin@example.com").get();
-        User moderator = userRepository.findByEmail("moderator@example.com").get();
-        List<MenuItem> menuItems = List.of(
-                createMenuItem("Gelato", "An Italian version of ice cream that's denser and has a more intense flavor, made with more milk and less cream than its American counterpart, available in a variety of flavors.", "https://emmaduckworthbakes.com/wp-content/uploads/2023/06/Chocolate-Gelato-Recipe.jpg", 10, MenuItemCategory.DESSERT, adminUser),
-                createMenuItem("Chocolate Souffle", "A small chocolate cake with a gooey, molten center, served warm to contrast the soft cake exterior and the liquid chocolate inside.", "https://rud.ua/uploads/under_recipe/shokoladnyi-fondan-600x300_5f2d431d9f2d3.jpg", 9.99, MenuItemCategory.DESSERT, adminUser),
-                createMenuItem("Cheesecake", "A smooth and creamy dessert with a dense, rich filling made of cream cheese, eggs, and sugar, on a crumbly graham cracker crust, often topped with fruit or chocolate.", "https://popmenucloud.com/cdn-cgi/image/width%3D1200%2Cheight%3D1200%2Cfit%3Dscale-down%2Cformat%3Dauto%2Cquality%3D60/hfdbjynv/350f06d0-db15-4a80-87e9-d6305569c047.jpg", 7.99, MenuItemCategory.DESSERT, moderator),
-                createMenuItem("Crème Brûlée", "A French dessert featuring a rich custard base topped with a contrasting layer of hard caramel, cracked with a spoon for that satisfying first bite.", "https://www.onceuponachef.com/images/2023/02/Creme-brulee-1-1200x814.jpg", 8.99, MenuItemCategory.DESSERT, adminUser),
-                createMenuItem("Chorizo Tacos", "Scrambled eggs with chorizo, bacon, or potatoes, topped with cheese and salsa, wrapped in a soft flour tortilla.", "https://www.badmanners.com/sites/default/files/styles/recipe_big/public/recipes/Poblano%20Breakfast%20Tacos_Edited.jpg", 9.99, MenuItemCategory.TACOS, moderator),
-                createMenuItem("Birria Tacos", "Tender, stewed meat marinated in a rich and spicy sauce, served in a corn tortilla that's been dipped in the stew's fat and grilled until crispy. Often accompanied by a side of consommé for dipping.", "https://hips.hearstapps.com/hmg-prod/images/delish-202104-birriatacos-033-1619806490.jpg?crop=0.670xw:1.00xh;0,0&resize=1200:*", 16.99, MenuItemCategory.TACOS, moderator),
-                createMenuItem("Vegetarian Tacos", "A mixture of sautéed vegetables (like bell peppers, onions, zucchini) and beans, topped with avocado and queso fresco, served in a corn tortilla.", "https://img.taste.com.au/J58ry7EH/w720-h480-cfill-q80/taste/2022/04/cuban-vegetarian-tacos-177724-1.jpg", 12, MenuItemCategory.TACOS, moderator),
-                createMenuItem("Chicken Tinga Tacos", "Shredded chicken cooked in a spicy, smoky tomato sauce with onions and chipotle peppers, garnished with avocado slices and queso fresco.", "https://hips.hearstapps.com/hmg-prod/images/chicken-tinga-5-1579643696.jpg?crop=0.888888888888889xw:1xh;center,top&resize=1200:*", 13.99, MenuItemCategory.TACOS, adminUser),
-                createMenuItem("Al Pastor Tacos", "Marinated pork shoulder that's been thinly sliced, cooked on a vertical rotisserie, and served with pineapple, onions, and cilantro.", "https://thestayathomechef.com/wp-content/uploads/2019/07/Tacos-al-Pastor-2-1.jpg", 13, MenuItemCategory.TACOS, moderator),
-                createMenuItem("Carnitas Tacos", "Slow-cooked pork shoulder, pulled apart and then crisped up in the oven or pan, served with diced onions, cilantro, and a squeeze of lime.", "https://www.inspiredtaste.net/wp-content/uploads/2022/11/Carnitas-1200-1200x800.jpg", 11.99, MenuItemCategory.TACOS, adminUser)
-        );
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ClassPathResource resource = new ClassPathResource("menu_batch.json");
+            InputStream inputStream = resource.getInputStream();
 
-        menuItemRepository.saveAll(menuItems);
-        System.out.println("MenuItems seeded successfully.");
+
+            // Check if the file exists
+            if (!resource.exists()) {
+                System.out.println("File not found: menu_batch.json");
+                return;
+            }
+
+            // Read the JSON array from the file
+            JsonNode rootNode = objectMapper.readTree(inputStream);
+            List<MenuItem> menuItems = new ArrayList<>();
+
+            // Retrieve users
+            User adminUser = userRepository.findByEmail("admin@example.com").orElse(null);
+            User moderator = userRepository.findByEmail("moderator@example.com").orElse(null);
+
+            if (adminUser == null || moderator == null) {
+                System.out.println("Admin or Moderator user not found. Cannot seed menu items.");
+                return;
+            }
+
+            // Iterate over each element in the JSON array
+            for (JsonNode node : rootNode) {
+                String title = node.get("title").asText();
+                String description = node.get("description").asText();
+                String imageUrl = node.get("imageUrl").asText();
+                double price = node.get("price").asDouble();
+                boolean defaultItem = node.get("defaultItem").asBoolean();
+                String categoryText = node.get("category").asText();
+                String creatorField = node.get("creator").asText();
+
+                MenuItemCategory category;
+                try {
+                    category = MenuItemCategory.valueOf(categoryText.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Invalid category: " + categoryText);
+                    continue; // Skip this item if category is invalid
+                }
+
+                User creator = creatorField.equalsIgnoreCase("adminUser") ? adminUser : moderator;
+
+                MenuItem menuItem = createMenuItem(title, description, imageUrl, price,defaultItem, category, creator);
+                menuItems.add(menuItem);
+            }
+
+            // Save all menu items to the repository
+            menuItemRepository.saveAll(menuItems);
+            System.out.println("Menu items seeded successfully.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void seedOrders() {
@@ -102,7 +155,7 @@ public class DatabaseSeeder {
         return user;
     }
 
-    private MenuItem createMenuItem(String title, String description, String imageUrl, double price, MenuItemCategory category, User user) {
+    private MenuItem createMenuItem(String title, String description, String imageUrl, double price,boolean defaultItem, MenuItemCategory category, User user) {
         MenuItem menuItem = new MenuItem();
         menuItem.setTitle(title);
         menuItem.setDescription(description);
@@ -110,6 +163,7 @@ public class DatabaseSeeder {
         menuItem.setPrice(price);
         menuItem.setCategory(category);
         menuItem.setUser(user);
+        menuItem.setDefaultItem(defaultItem);
         return menuItem;
     }
 
