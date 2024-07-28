@@ -7,6 +7,7 @@ import com.foodsquad.FoodSquad.model.entity.Order;
 import com.foodsquad.FoodSquad.model.entity.User;
 import com.foodsquad.FoodSquad.model.entity.UserRole;
 import com.foodsquad.FoodSquad.repository.MenuItemRepository;
+import com.foodsquad.FoodSquad.repository.OrderRepository;
 import com.foodsquad.FoodSquad.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ public class MenuItemService {
 
     @Autowired
     private MenuItemRepository menuItemRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -57,13 +61,14 @@ public class MenuItemService {
     }
 
     public ResponseEntity<MenuItemDTO> getMenuItemById(Long id) {
-        Optional<MenuItem> menuItem = menuItemRepository.findById(id);
-        if (menuItem.isPresent()) {
-//            checkOwnership(menuItem.get());
-            MenuItemDTO menuItemDTO = modelMapper.map(menuItem.get(), MenuItemDTO.class);
+        Optional<MenuItem> menuItemOpt = menuItemRepository.findById(id);
+        if (menuItemOpt.isPresent()) {
+            MenuItem menuItem = menuItemOpt.get();
+            int salesCount = orderRepository.countByMenuItemId(menuItem.getId());
+            MenuItemDTO menuItemDTO = new MenuItemDTO(menuItem, salesCount);
             return ResponseEntity.ok(menuItemDTO);
-        }else {
-            throw new IllegalArgumentException("Menu Item not found");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
@@ -71,7 +76,10 @@ public class MenuItemService {
         Pageable pageable = PageRequest.of(page, limit);
         Page<MenuItem> menuItemPage = menuItemRepository.findAll(pageable);
         return menuItemPage.stream()
-                .map(MenuItemDTO::new)
+                .map(menuItem -> {
+                    int salesCount = orderRepository.countByMenuItemId(menuItem.getId());
+                    return new MenuItemDTO(menuItem, salesCount);
+                })
                 .collect(Collectors.toList());
     }
 
