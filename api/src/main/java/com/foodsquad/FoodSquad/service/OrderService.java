@@ -1,13 +1,12 @@
 package com.foodsquad.FoodSquad.service;
 
+import com.foodsquad.FoodSquad.model.dto.MenuItemDTO;
 import com.foodsquad.FoodSquad.model.dto.OrderDTO;
-import com.foodsquad.FoodSquad.model.entity.MenuItem;
-import com.foodsquad.FoodSquad.model.entity.Order;
-import com.foodsquad.FoodSquad.model.entity.OrderStatus;
-import com.foodsquad.FoodSquad.model.entity.User;
+import com.foodsquad.FoodSquad.model.entity.*;
 import com.foodsquad.FoodSquad.repository.MenuItemRepository;
 import com.foodsquad.FoodSquad.repository.OrderRepository;
 import com.foodsquad.FoodSquad.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,9 +14,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -36,33 +38,40 @@ public class OrderService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public ResponseEntity<String> createOrder(OrderDTO orderDTO) {
-        Order order = new Order();
+    private User getCurrentUser() {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
 
-        // Find user by email
-        Optional<User> userOpt = userRepository.findByEmail(orderDTO.getUserEmail());
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            order.setUser(user);
-        } else {
-            throw new IllegalArgumentException("User not found with email: " + orderDTO.getUserEmail());
+    private void checkOwnership(Long userId) {
+        User currentUser = getCurrentUser();
+        if (!currentUser.getId().equals(userId) && !currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.getRole().equals(UserRole.MODERATOR)) {
+            throw new IllegalArgumentException("Access denied");
         }
+    }
 
-        // Set menu items
+    public ResponseEntity<OrderDTO> createOrder(OrderDTO orderDTO) {
+        User user = userRepository.findByEmail(orderDTO.getUserEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + orderDTO.getUserEmail()));
+
         List<MenuItem> menuItems = menuItemRepository.findAllById(orderDTO.getMenuItemIds());
         if (menuItems.isEmpty()) {
             throw new IllegalArgumentException("Order must contain at least one MenuItem");
         }
-        order.setMenuItems(menuItems);
 
-        // Set other fields
+        Order order = new Order();
+        order.setUser(user);
+        order.setMenuItems(menuItems);
         order.setStatus(OrderStatus.valueOf(orderDTO.getStatus().toUpperCase()));
         order.setTotalCost(orderDTO.getTotalCost());
         order.setCreatedOn(orderDTO.getCreatedOn());
         order.setPaid(orderDTO.getPaid());
 
         orderRepository.save(order);
-        return new ResponseEntity<>("Order successfully created.", HttpStatus.CREATED);
+        Order savedOrder = orderRepository.save(order);
+        OrderDTO responseDTO = modelMapper.map(savedOrder, OrderDTO.class);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
     public List<OrderDTO> getAllOrders(int page, int size) {
@@ -74,6 +83,7 @@ public class OrderService {
     }
 
     public List<OrderDTO> getOrdersByUserId(Long userId, int page, int size) {
+        checkOwnership(userId);
         Pageable pageable = PageRequest.of(page, size);
         Page<Order> orders = orderRepository.findOrdersByUserId(userId, pageable);
         return orders.stream()
@@ -81,55 +91,46 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public OrderDTO getOrderById(Long id) {
+    public ResponseEntity<OrderDTO> getOrderById(String id) {
         Order order = orderRepository.findOrderWithUserById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-        return modelMapper.map(order, OrderDTO.class);
+                .orElseThrow(() -> new EntityNotFoundException("Order not found for ID: " + id));
+        OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
+        return ResponseEntity.ok(orderDTO);
     }
 
-    public ResponseEntity<String> updateOrder(Long id, OrderDTO orderDTO) {
-        Optional<Order> existingOrderOpt = orderRepository.findById(id);
-        if (existingOrderOpt.isPresent()) {
-            Order order = existingOrderOpt.get();
+    public ResponseEntity<OrderDTO> updateOrder(String id, OrderDTO orderDTO) {
+        Order existingOrder = orderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found for ID: " + id));
 
-            // Update user
-            Optional<User> userOpt = userRepository.findByEmail(orderDTO.getUserEmail());
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                order.setUser(user);
-            } else {
-                throw new IllegalArgumentException("User not found with email: " + orderDTO.getUserEmail());
-            }
+        // Update user
+        User user = userRepository.findByEmail(orderDTO.getUserEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + orderDTO.getUserEmail()));
+        existingOrder.setUser(user);
 
-            // Update menu items
-            List<MenuItem> menuItems = menuItemRepository.findAllById(orderDTO.getMenuItemIds());
-            if (menuItems.isEmpty()) {
-                throw new IllegalArgumentException("Order must contain at least one MenuItem");
-            }
-            order.setMenuItems(menuItems);
-
-            // Update other fields
-            order.setStatus(OrderStatus.valueOf(orderDTO.getStatus().toUpperCase()));
-            order.setTotalCost(orderDTO.getTotalCost());
-            order.setPaid(orderDTO.getPaid());
-
-            orderRepository.save(order);
-            return new ResponseEntity<>("Order successfully updated.", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Order not found", HttpStatus.NOT_FOUND);
+        // Update menu items
+        List<MenuItem> menuItems = menuItemRepository.findAllById(orderDTO.getMenuItemIds());
+        if (menuItems.isEmpty()) {
+            throw new IllegalArgumentException("Order must contain at least one MenuItem");
         }
+        existingOrder.setMenuItems(menuItems);
+
+        // Update other fields
+        existingOrder.setStatus(OrderStatus.valueOf(orderDTO.getStatus().toUpperCase()));
+        existingOrder.setTotalCost(orderDTO.getTotalCost());
+        existingOrder.setPaid(orderDTO.getPaid());
+
+        orderRepository.save(existingOrder);
+        OrderDTO updatedOrderDTO = modelMapper.map(existingOrder, OrderDTO.class);
+        return ResponseEntity.ok(updatedOrderDTO);
     }
 
-    public ResponseEntity<String> deleteOrder(Long id) {
-        Optional<Order> orderOpt = orderRepository.findById(id);
-        if (orderOpt.isPresent()) {
-            orderRepository.delete(orderOpt.get());
-            return new ResponseEntity<>("Order successfully deleted.", HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>("Order not found", HttpStatus.NOT_FOUND);
-        }
-    }
 
+    public ResponseEntity<Map<String, String>> deleteOrder(String id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found for ID: " + id));
+        orderRepository.delete(order);
+        return ResponseEntity.ok(Map.of("message", "Order successfully deleted"));
+    }
 
 
     private OrderDTO convertToDTO(Order order) {
