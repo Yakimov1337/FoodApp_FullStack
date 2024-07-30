@@ -6,6 +6,7 @@ import com.foodsquad.FoodSquad.model.entity.Order;
 import com.foodsquad.FoodSquad.model.entity.User;
 import com.foodsquad.FoodSquad.model.entity.UserRole;
 import com.foodsquad.FoodSquad.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,9 +14,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -27,6 +31,20 @@ public class UserService {
     @Autowired
     private ModelMapper modelMapper;
 
+    private User getCurrentUser() {
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    private void checkOwnership(Long userId) {
+        User currentUser = getCurrentUser();
+        if (!currentUser.getId().equals(userId) && !currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.getRole().equals(UserRole.MODERATOR)) {
+            throw new IllegalArgumentException("Access denied");
+        }
+    }
+
+
     public List<UserResponseDTO> getAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<User> userPage = userRepository.findAll(pageable);
@@ -37,37 +55,34 @@ public class UserService {
 
 
     public ResponseEntity<UserResponseDTO> getUserById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            UserResponseDTO userDTO = modelMapper.map(user.get(), UserResponseDTO.class);
-            return ResponseEntity.ok(userDTO);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found for ID: " + id));
+        UserResponseDTO userDTO = modelMapper.map(user, UserResponseDTO.class);
+        return ResponseEntity.ok(userDTO);
     }
 
-    public ResponseEntity<String> updateUser(Long id, UserResponseDTO userResponseDTO) {
-        Optional<User> existingUser = userRepository.findById(id);
-        if (existingUser.isPresent()) {
-            User user = existingUser.get();
-            user.setName(userResponseDTO.getName());
-            user.setEmail(userResponseDTO.getEmail());
-            user.setRole(UserRole.valueOf(userResponseDTO.getRole()));
-            user.setImageUrl(userResponseDTO.getImageUrl());
-            user.setPhoneNumber(userResponseDTO.getPhoneNumber());
-            userRepository.save(user);
-            return ResponseEntity.ok("User successfully updated.");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
-        }
+    public ResponseEntity<UserResponseDTO> updateUser(Long id, UserResponseDTO userResponseDTO) {
+       checkOwnership(id);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found for ID: " + id));
+
+        user.setName(userResponseDTO.getName());
+        user.setEmail(userResponseDTO.getEmail());
+        user.setRole(UserRole.valueOf(userResponseDTO.getRole()));
+        user.setImageUrl(userResponseDTO.getImageUrl());
+        user.setPhoneNumber(userResponseDTO.getPhoneNumber());
+
+        userRepository.save(user);
+        UserResponseDTO updatedUserDTO = modelMapper.map(user, UserResponseDTO.class);
+        return ResponseEntity.ok(updatedUserDTO);
     }
 
-    public ResponseEntity<String> deleteUser(Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return ResponseEntity.ok("User successfully deleted.");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
-        }
+    public ResponseEntity<Map<String, String>> deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found for ID: " + id));
+
+        userRepository.delete(user);
+        return ResponseEntity.ok(Map.of("message","User successfully deleted."));
     }
 }
