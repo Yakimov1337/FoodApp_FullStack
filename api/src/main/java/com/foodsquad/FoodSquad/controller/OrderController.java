@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Validated
 @RestController
@@ -22,14 +23,13 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<String> createOrder(@Valid @RequestBody OrderDTO orderDTO) {
+    public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody OrderDTO orderDTO) {
         return orderService.createOrder(orderDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id) {
-        OrderDTO order = orderService.getOrderById(id);
-        return ResponseEntity.ok(order);
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable String id) {
+        return orderService.getOrderById(id);
     }
 
     @GetMapping("/user/{userId}")
@@ -46,12 +46,12 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateOrder(@PathVariable Long id, @Valid @RequestBody OrderDTO orderDTO) {
+    public ResponseEntity<OrderDTO> updateOrder(@PathVariable String id, @Valid @RequestBody OrderDTO orderDTO) {
         return orderService.updateOrder(id, orderDTO);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteOrder(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteOrder(@PathVariable String id) {
         return orderService.deleteOrder(id);
     }
 }
