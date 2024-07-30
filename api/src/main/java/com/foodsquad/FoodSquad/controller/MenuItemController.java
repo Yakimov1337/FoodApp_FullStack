@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Validated
 @RestController
@@ -21,7 +22,7 @@ public class MenuItemController {
     private MenuItemService menuItemService;
 
     @PostMapping
-    public ResponseEntity<String> createMenuItem(@Valid @RequestBody MenuItemDTO menuItemDTO) {
+    public ResponseEntity<MenuItemDTO> createMenuItem(@Valid @RequestBody MenuItemDTO menuItemDTO) {
         return menuItemService.createMenuItem(menuItemDTO);
     }
 
@@ -31,17 +32,26 @@ public class MenuItemController {
     }
 
     @GetMapping
-    public List<MenuItemDTO> getAllMenuItems(@RequestParam(defaultValue = "0")int page, @RequestParam(defaultValue = "20") int limit) {
-        return menuItemService.getAllMenuItems(page, limit);
+    public List<MenuItemDTO> getAllMenuItems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(defaultValue = "salesCount") String sortBy,
+            @RequestParam(defaultValue = "true") boolean desc) {
+        return menuItemService.getAllMenuItems(page, limit, sortBy, desc);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateMenuItem(@PathVariable Long id, @Valid @RequestBody MenuItemDTO menuItemDTO) {
+    public ResponseEntity<MenuItemDTO> updateMenuItem(@PathVariable Long id, @Valid @RequestBody MenuItemDTO menuItemDTO) {
         return menuItemService.updateMenuItem(id, menuItemDTO);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteMenuItem(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteMenuItem(@PathVariable Long id) {
         return menuItemService.deleteMenuItem(id);
+    }
+
+    @GetMapping("/batch")
+    public ResponseEntity<List<MenuItemDTO>> getMenuItemsByIds(@RequestParam List<Long> ids) {
+        return menuItemService.getMenuItemsByIds(ids);
     }
 }
