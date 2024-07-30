@@ -27,13 +27,14 @@ public class MenuItemDTO {
     @Schema(defaultValue = "https://www.tastingtable.com/img/gallery/what-makes-restaurant-burgers-taste-different-from-homemade-burgers-upgrade/l-intro-1662064407.jpg")
     private String imageUrl;
 
+    @JsonIgnore
     private Boolean defaultItem;
 
     @NotNull(message = "Price cannot be null")
     @Positive(message = "Price must be positive")
     private Double price;
 
-    @NotNull(message = "Price cannot be null")
+    @NotNull(message = "Category cannot be null")
 //    @Pattern(regexp = "BURGER|PIZZA|SUSHI|PASTA|SALAD|TACOS|DESSERT|OTHER", message = "Category must be one of the following: BURGER, PIZZA, SUSHI,PASTA,SALAD,TACOS,DESSERT,OTHER")
     @Schema(defaultValue = "BURGER")
     private MenuItemCategory category;
@@ -108,8 +109,12 @@ public class MenuItemDTO {
         return category;
     }
 
-    public void setCategory() {
-        this.category = category;
+    public void setCategory(String category) {
+        if (category != null) {
+            this.category = MenuItemCategory.valueOf(category.toUpperCase());
+        } else {
+            throw new IllegalArgumentException("Category cannot be null");
+        }
     }
 
     public Integer getSalesCount() {
