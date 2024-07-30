@@ -34,8 +34,8 @@ public class AuthService implements UserDetailsService {
     private ModelMapper modelMapper;
 
     @Override
-    public UserDetails loadUserByUsername(String username) {
-        return userRepository.findByEmail(username)
+    public UserDetails loadUserByUsername(String email) {
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
