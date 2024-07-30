@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<Order, String> {
     @Query("SELECT COUNT(o) FROM Order o JOIN o.menuItems mi WHERE mi.id = :menuItemId")
     int countByMenuItemId(@Param("menuItemId") Long menuItemId);
 
@@ -18,7 +18,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllOrdersWithUsers(Pageable pageable);
 
     @Query("SELECT o FROM Order o JOIN o.user u WHERE o.id = :orderId")
-    Optional<Order> findOrderWithUserById(@Param("orderId") Long orderId);
+    Optional<Order> findOrderWithUserById(@Param("orderId") String orderId);
 
     @Query("SELECT o FROM Order o JOIN o.user u WHERE u.id = :userId")
     Page<Order> findOrdersByUserId(@Param("userId") Long userId, Pageable pageable);
