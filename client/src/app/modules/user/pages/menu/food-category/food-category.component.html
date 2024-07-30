@@ -23,9 +23,10 @@
 
     <!-- Categories -->
     <div class="flex flex-wrap justify-center">
-      <div *ngFor="let category of categories" class="p-2">
+      <div *ngFor="let category of categories; let i = index" class="p-2">
         <button
           (click)="selectCategory(category)"
+          [@slideIn]="determineAnimation(i)"
           [ngClass]="selectedCategory === category.value.toLowerCase() ? 'bg-gradient-to-tr from-primary to-transparent text-white opacity-90' : 'bg-transparent text-white'"
           class="flex h-32 w-32 transform flex-col items-center justify-center rounded-lg border-2 border-primary shadow-lg shadow-primary transition-transform duration-300 hover:scale-110 hover:shadow-xl">
           <!-- Category Icon -->

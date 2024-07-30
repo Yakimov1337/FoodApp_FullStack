@@ -1,12 +1,27 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-contact-us',
   standalone: true,
   imports: [FormsModule],
   templateUrl: './contact-us.component.html',
+  animations: [
+    trigger('slideInLeft', [
+      transition(':enter', [
+        style({ transform: 'translateX(-100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateX(0)', opacity: 1 })),
+      ]),
+    ]),
+    trigger('slideInDown', [
+      transition(':enter', [
+        style({ transform: 'translateY(-100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateY(0)', opacity: 1 })),
+      ]),
+    ]),
+  ],
 })
 export class ContactUsComponent {
   email: string = '';
@@ -14,7 +29,7 @@ export class ContactUsComponent {
   message: string = '';
 
   constructor(private toastr: ToastrService) {}
-  
+
   onSubmit(): void {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!this.email || !emailRegex.test(this.email)) {

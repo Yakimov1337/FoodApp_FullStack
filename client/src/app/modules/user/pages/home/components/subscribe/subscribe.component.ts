@@ -1,12 +1,28 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-subscribe',
   standalone: true,
   imports: [FormsModule],
   templateUrl: './subscribe.component.html',
+  animations: [
+    trigger('slideInLeft', [
+      transition(':enter', [
+        style({ transform: 'translateX(-100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateX(0)', opacity: 1 })),
+      ]),
+    ]),
+    trigger('slideInDown', [
+      transition(':enter', [
+        style({ transform: 'translateY(-100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateY(0)', opacity: 1 })),
+      ]),
+    ]),
+  ],
+
 })
 export class SubscribeComponent {
   @ViewChild('stats') statsSection!: ElementRef<HTMLDivElement>;

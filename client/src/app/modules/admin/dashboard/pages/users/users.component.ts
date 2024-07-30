@@ -6,12 +6,21 @@ import { UserDeleteModalComponent } from '../../components/users/user-delete-mod
 import { UserUpdateModalComponent } from '../../components/users/user-update-modal/user-update-modal.component';
 import { selectIsCreateUserModalOpen, selectIsDeleteUserModalOpen, selectIsUpdateUserModalOpen } from '../../../../../core/state/modal/user/modal.selectors';
 import { CommonModule } from '@angular/common';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-users',
   standalone: true,
   imports: [CommonModule, UsersTableComponent, UserCreateModalComponent, UserDeleteModalComponent, UserUpdateModalComponent],
   templateUrl: './users.component.html',
+  animations: [
+    trigger('slideInRight', [
+      transition(':enter', [
+        style({ transform: 'translateX(100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateX(0)', opacity: 1 })),
+      ]),
+    ]),
+  ],
 })
 export class UsersComponent {
   showCreateUserModal$ = this.store.select(selectIsCreateUserModalOpen);

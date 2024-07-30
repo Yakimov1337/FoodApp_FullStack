@@ -1,12 +1,27 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { trigger, transition, style, animate, state } from '@angular/animations';
 
 @Component({
   selector: 'app-food-category',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './food-category.component.html',
+  animations: [
+    trigger('slideIn', [
+      state('slideInFromLeft', style({ transform: 'translateX(0)', opacity: 1 })), // Define end state for clarity, even if not used for animation
+      state('slideInFromRight', style({ transform: 'translateX(0)', opacity: 1 })), // Define end state for clarity
+      transition('* => slideInFromLeft', [
+        style({ transform: 'translateX(-100%)', opacity: 0 }),
+        animate('1s ease-out')
+      ]),
+      transition('* => slideInFromRight', [
+        style({ transform: 'translateX(100%)', opacity: 0 }),
+        animate('1s ease-out')
+      ]),
+    ])
+  ]
 })
 export class FoodCategoryComponent implements OnInit {
   selectedCategory = 'burger'; // Default category
@@ -34,5 +49,9 @@ export class FoodCategoryComponent implements OnInit {
   selectCategory(category: { label: string; value: string }): void {
     // Navigate and update the queryParams upon selection
     this.router.navigate(['/menu'], { queryParams: { category: category.value.toLowerCase() } });
+  }
+
+  determineAnimation(i: number): string {
+    return i < 4 ? 'slideInFromLeft' : 'slideInFromRight';
   }
 }

@@ -7,12 +7,20 @@ import { FoodCategoryComponent } from './food-category/food-category.component';
 import { LoaderComponent } from '../../../../shared/components/loader/loader.component';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
   imports: [CommonModule, FoodCardComponent, FoodCategoryComponent, LoaderComponent],
   templateUrl: './menu.component.html',
+  animations: [
+    trigger('fadeInOut', [
+      state('in', style({ opacity: 1 })),
+      transition(':enter', [style({ opacity: 0 }), animate('0.5s ease-in', style({ opacity: 1 }))]),
+      transition(':leave', [animate('0.5s ease-out', style({ opacity: 0 }))])
+    ]),
+  ]
 })
 export class MenuComponent implements OnInit, OnDestroy {
   @ViewChild('menuItemsContainer') menuItemsContainer?: ElementRef;

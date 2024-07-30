@@ -1,17 +1,59 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 
 @Component({
   selector: 'app-food-category',
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './food-category.component.html',
+  animations: [
+    trigger('slideFromLeft', [
+      transition('* => true', [
+        style({ opacity: 0, transform: 'translateX(-100%)' }),
+        animate('1s ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+      ])
+    ]),
+    trigger('slideFromRight', [
+      transition('* => true', [
+        style({ opacity: 0, transform: 'translateX(100%)' }),
+        animate('1s ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+      ])
+    ])
+  ],
 })
-export class FoodCategoryComponent {
-  constructor(private router: Router) {}
+export class FoodCategoryComponent implements AfterViewInit {
+  @ViewChildren('foodItem', { read: ElementRef }) foodItems!: QueryList<ElementRef>;
+  isVisible: boolean[] = [];
+  constructor(private router: Router,private renderer: Renderer2) {}
   navigateToMenuWithCategory(category: string): void {
     this.router.navigate(['/menu'], { queryParams: { category: category.toLowerCase() } });
+  }
+
+
+  ngAfterViewInit(): void {
+    this.foodItems.forEach((elRef, i) => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Direct comparison to the nativeElement of each ElementRef
+            if (entry.target === elRef.nativeElement) {
+              this.isVisible[i] = true;
+            }
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      observer.observe(elRef.nativeElement);
+    });
+  }
+
+
+  shouldSlideFromLeft(index: number): boolean {
+    // Adjusted logic for 1st, 2nd, 6th, 7th elements (0-based index)
+    return [0, 1, 4, 5].includes(index);
   }
 
   foods = [

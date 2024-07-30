@@ -9,6 +9,7 @@ import { MenuItem } from '../../../../../core/models';
 import { Subscription } from 'rxjs';
 import { LoaderComponent } from '../../../../../shared/components/loader/loader.component';
 import { CommonModule } from '@angular/common';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-MenuItem',
@@ -22,6 +23,20 @@ import { CommonModule } from '@angular/common';
     MenuItemOverviewTableComponent,
     LoaderComponent,
     CommonModule,
+  ],
+  animations: [
+    trigger('slideInRight', [
+      transition(':enter', [
+        style({ transform: 'translateX(100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateX(0)', opacity: 1 })),
+      ]),
+    ]),
+    trigger('slideInDown', [
+      transition(':enter', [
+        style({ transform: 'translateY(-100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateY(0)', opacity: 1 })),
+      ]),
+    ]),
   ],
 })
 export class OverviewComponent implements OnInit {

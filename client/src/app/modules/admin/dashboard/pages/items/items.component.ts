@@ -6,7 +6,7 @@ import { MenuItemCreateModalComponent } from '../../components/menuItem/menuItem
 import { MenuItemDeleteModalComponent } from '../../components/menuItem/menuItem-delete-modal/menuItem-delete-modal.component';
 import { MenuItemUpdateModalComponent } from '../../components/menuItem/menuItem-update-modal/menuItem-update-modal.component';
 import { selectIsCreateMenuItemModalOpen, selectIsDeleteMenuItemModalOpen, selectIsUpdateMenuItemModalOpen } from '../../../../../core/state/modal/menuItem/modal.selectors';
-
+import { animate, style, transition, trigger } from '@angular/animations';
 @Component({
   selector: 'app-items',
   standalone: true,
@@ -18,6 +18,14 @@ import { selectIsCreateMenuItemModalOpen, selectIsDeleteMenuItemModalOpen, selec
     MenuItemUpdateModalComponent,
   ],
   templateUrl: './items.component.html',
+  animations: [
+    trigger('slideInRight', [
+      transition(':enter', [
+        style({ transform: 'translateX(100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateX(0)', opacity: 1 })),
+      ]),
+    ]),
+  ],
 })
 export class ItemsComponent {
   showCreateMenuItemModal$ = this.store.select(selectIsCreateMenuItemModalOpen);

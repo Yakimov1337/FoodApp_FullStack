@@ -1,16 +1,65 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  QueryList,
+  Renderer2,
+  ViewChildren,
+} from '@angular/core';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { ToastrService } from 'ngx-toastr';
 import { StripeService } from '../../../../../../services/stripe.service';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-pricing',
   standalone: true,
   imports: [AngularSvgIconModule, CommonModule],
   templateUrl: './pricing.component.html',
+  animations: [
+    trigger('enterFromLeft', [
+      transition('* => true', [
+        style({ opacity: 0, transform: 'translateX(-100%)' }),
+        animate('1s', style({ opacity: 1, transform: 'translateX(0)' })),
+      ]),
+    ]),
+    trigger('enterFromRight', [
+      transition('* => true', [
+        style({ opacity: 0, transform: 'translateX(100%)' }),
+        animate('1s', style({ opacity: 1, transform: 'translateX(0)' })),
+      ]),
+    ]),
+  ],
 })
-export class PricingComponent {
+export class PricingComponent implements AfterViewInit {
+  @ViewChildren('planElement') planElements!: QueryList<ElementRef>;
+  isVisible: boolean[] = [false, true, false];
+  constructor(private stripeService: StripeService, private renderer: Renderer2) {}
+
+  ngAfterViewInit(): void {
+    this.planElements.forEach((plan, index) => {
+      if (index === 0 || index === 2) {
+        // Only observe the 1st and 3rd plans
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                this.isVisible[index] = true; // Set the flag to true when in view
+                observer.unobserve(entry.target); // Stop observing once visible
+              }
+            });
+          },
+          { threshold: 0.5 },
+        );
+
+        observer.observe(plan.nativeElement);
+      }
+    });
+  }
+
   plans = [
     {
       name: 'Basic Bite',
@@ -42,8 +91,6 @@ export class PricingComponent {
       actionLink: '#',
     },
   ];
-
-  constructor(private stripeService: StripeService, private toastr: ToastrService) {}
 
   subscribe(planId: string) {
     this.stripeService.checkoutSubscription(planId);

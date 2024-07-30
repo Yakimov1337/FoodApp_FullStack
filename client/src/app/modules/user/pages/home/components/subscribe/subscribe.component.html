@@ -6,28 +6,27 @@
     <div class="absolute inset-0 bg-black opacity-50"></div>
   </div>
 
-  <div class="container relative z-10 mx-auto flex flex-col items-center justify-between md:flex-row md:space-x-4">
+  <div class="container relative z-10 mx-auto flex flex-col items-center justify-between md:flex-row md:space-x-4" >
     <!-- Text Container -->
-    <div class="md:w-2/5">
-      <h2 class=" mb-4 text-4xl font-bold text-white">
-        Sign up for our <span class="text-primary">newsletter</span>
-      </h2>
-      <p class=" mb-6 text-white">
+    <div class="md:w-2/5" >
+      <h2 class="mb-4 text-4xl font-bold text-white">Sign up for our <span class="text-primary">newsletter</span></h2>
+      <p class="mb-6 text-white">
         Stay up to date with the roadmap progress, announcements, and exclusive discounts. Feel free to sign up with
         your email.
       </p>
-      <p class=" text-lg text-white">
+      <p class="text-lg text-white">
         We care about the protection of your data.
         <a href="#" class="text-primary hover:underline">Read our Privacy Policy.</a>
       </p>
     </div>
 
     <!-- Form Container -->
-    <div class="z-10 md:w-3/5">
-      <form class="flex w-full flex-col justify-center sm:flex-row md:justify-end">
+    <div class="z-10 md:w-3/5" >
+      <form class="flex w-full flex-col justify-center sm:flex-row md:justify-end"   >
         <div class="relative w-full sm:w-auto">
           <!-- Two-way binding for the email input -->
           <input
+
             type="email"
             id="email"
             name="email"
@@ -48,6 +47,7 @@
           </div>
         </div>
         <button
+
           (click)="onSubmit()"
           class="mt-4 rounded-md bg-primary py-2 px-4 font-bold text-white hover:opacity-75 sm:mt-0 sm:ml-4">
           Subscribe
