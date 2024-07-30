@@ -84,9 +84,9 @@ public class AuthController {
 
     @PostMapping("/refresh-token")
     public ResponseEntity<Map<String, String>> refreshToken(@CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
-        String username;
+        String email;
         try {
-            username = jwtUtil.extractClaims(refreshToken).getSubject();
+            email = jwtUtil.extractClaims(refreshToken).getSubject();
         } catch (ExpiredJwtException e) {
             logger.error("Refresh token has expired: {}", refreshToken);
             throw e;
@@ -98,28 +98,28 @@ public class AuthController {
             throw e;
         }
 
-        UserDetails userDetails = authService.loadUserByUsername(username);
+        UserDetails userDetails = authService.loadUserByUsername(email);
 
         if (!jwtUtil.validateToken(refreshToken, userDetails)) {
-            logger.warn("Refresh token validation failed for user: {}", username);
+            logger.warn("Refresh token validation failed for user: {}", email);
             throw new JwtException("Invalid refresh token");
         }
 
-        if (!authService.isRefreshTokenValid(username, refreshToken)) {
-            logger.warn("Refresh token is not present in the database for user: {}", username);
+        if (!authService.isRefreshTokenValid(email, refreshToken)) {
+            logger.warn("Refresh token is not present in the database for user: {}", email);
             throw new JwtException("Invalid refresh token");
         }
 
         Map<String, Object> claims = jwtUtil.extractClaims(refreshToken);
 
-        String newAccessToken = jwtUtil.generateToken(claims, username, accessTokenExpiration);
-        String newRefreshToken = jwtUtil.generateToken(claims, username, refreshTokenExpiration);
+        String newAccessToken = jwtUtil.generateToken(claims, email, accessTokenExpiration);
+        String newRefreshToken = jwtUtil.generateToken(claims, email, refreshTokenExpiration);
 
         // Invalidate the old refresh token
         authService.invalidateRefreshToken(refreshToken);
 
         // Save the new refresh token
-        authService.saveRefreshToken(username, newRefreshToken);
+        authService.saveRefreshToken(email, newRefreshToken);
 
         Cookie refreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
         refreshTokenCookie.setHttpOnly(true);
