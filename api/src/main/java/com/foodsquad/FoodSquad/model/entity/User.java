@@ -30,7 +30,7 @@ public class User implements UserDetails {
     private UserRole role = UserRole.NORMAL;
 
     @Column(nullable = false)
-    private String imageUrl;
+    private String imageUrl = "https://www.pngarts.com/files/11/Avatar-Transparent-Images.png";
 
     private String phoneNumber;
 
