@@ -44,7 +44,7 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-    private void checkOwnership(Long userId) {
+    private void checkOwnership(String userId) {
         User currentUser = getCurrentUser();
         if (!currentUser.getId().equals(userId) && !currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.getRole().equals(UserRole.MODERATOR)) {
             throw new IllegalArgumentException("Access denied");
@@ -82,7 +82,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public List<OrderDTO> getOrdersByUserId(Long userId, int page, int size) {
+    public List<OrderDTO> getOrdersByUserId(String userId, int page, int size) {
         checkOwnership(userId);
         Pageable pageable = PageRequest.of(page, size);
         Page<Order> orders = orderRepository.findOrdersByUserId(userId, pageable);

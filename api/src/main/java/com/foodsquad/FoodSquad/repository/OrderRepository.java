@@ -21,5 +21,5 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     Optional<Order> findOrderWithUserById(@Param("orderId") String orderId);
 
     @Query("SELECT o FROM Order o JOIN o.user u WHERE u.id = :userId")
-    Page<Order> findOrdersByUserId(@Param("userId") Long userId, Pageable pageable);
+    Page<Order> findOrdersByUserId(@Param("userId") String userId, Pageable pageable);
 }

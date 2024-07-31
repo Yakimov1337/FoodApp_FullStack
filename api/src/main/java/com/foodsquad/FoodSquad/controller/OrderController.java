@@ -34,7 +34,7 @@ public class OrderController {
 
     @GetMapping("/user/{userId}")
     public List<OrderDTO> getOrdersByUserId(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return orderService.getOrdersByUserId(userId, page, size);

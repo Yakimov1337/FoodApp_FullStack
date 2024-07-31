@@ -37,7 +37,7 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-    private void checkOwnership(Long userId) {
+    private void checkOwnership(String userId) {
         User currentUser = getCurrentUser();
         if (!currentUser.getId().equals(userId) && !currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.getRole().equals(UserRole.MODERATOR)) {
             throw new IllegalArgumentException("Access denied");
@@ -54,14 +54,14 @@ public class UserService {
     }
 
 
-    public ResponseEntity<UserResponseDTO> getUserById(Long id) {
+    public ResponseEntity<UserResponseDTO> getUserById(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found for ID: " + id));
         UserResponseDTO userDTO = modelMapper.map(user, UserResponseDTO.class);
         return ResponseEntity.ok(userDTO);
     }
 
-    public ResponseEntity<UserResponseDTO> updateUser(Long id, UserResponseDTO userResponseDTO) {
+    public ResponseEntity<UserResponseDTO> updateUser(String id, UserResponseDTO userResponseDTO) {
        checkOwnership(id);
 
         User user = userRepository.findById(id)
@@ -78,7 +78,7 @@ public class UserService {
         return ResponseEntity.ok(updatedUserDTO);
     }
 
-    public ResponseEntity<Map<String, String>> deleteUser(Long id) {
+    public ResponseEntity<Map<String, String>> deleteUser(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found for ID: " + id));
 
