@@ -34,7 +34,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
+                                // Auth controller endpoints
                                 .requestMatchers("/api/auth/**").permitAll()
+                                // Token controller endpoints
+                                .requestMatchers("/api/token/**").permitAll()
+                                // Swagger
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                                 // User controller endpoints
                                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("ADMIN", "MODERATOR")
@@ -51,6 +55,11 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/menu-items/**").hasAnyRole("ADMIN", "MODERATOR")
                                 .requestMatchers(HttpMethod.PUT, "/api/menu-items/**").hasAnyRole("ADMIN", "MODERATOR")
                                 .requestMatchers(HttpMethod.DELETE, "/api/menu-items/**").hasAnyRole("ADMIN", "MODERATOR")
+                                // Reviews controller endpoints
+                                .requestMatchers(HttpMethod.GET, "/api/reviews/**").hasAnyRole("ADMIN", "MODERATOR", "NORMAL")
+                                .requestMatchers(HttpMethod.POST, "/api/reviews/**").hasAnyRole("ADMIN", "MODERATOR", "NORMAL")
+                                .requestMatchers(HttpMethod.PUT, "/api/reviews/**").hasAnyRole("ADMIN", "MODERATOR")
+                                .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyRole("ADMIN", "MODERATOR")
                                 .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling ->
