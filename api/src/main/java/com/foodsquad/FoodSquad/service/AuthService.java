@@ -49,7 +49,6 @@ public class AuthService implements UserDetailsService {
         user.setEmail(userRegistrationDTO.getEmail());
         user.setPassword(passwordEncoder.encode(userRegistrationDTO.getPassword()));
         user.setRole(UserRole.NORMAL); // default value for user register through client form
-        user.setImageUrl("https://cloud.appwrite.io/v1/storage/buckets/66099552d89fbdfa20d4/files/663f1c48a822caaf325c/view?project=65ef1b8962547e24afec&mode=admin");
 
         User savedUser = userRepository.save(user);
         return modelMapper.map(savedUser, UserResponseDTO.class);
@@ -70,33 +69,6 @@ public class AuthService implements UserDetailsService {
         return modelMapper.map(user, UserResponseDTO.class);
     }
 
-    public boolean isRefreshTokenValid(String username, String refreshToken) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        Optional<Token> token = tokenRepository.findByUserAndToken(user, refreshToken);
-        return token.isPresent();
-    }
-
-    @Transactional
-    public void saveRefreshToken(String username, String refreshToken) {
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        //End all other sessions
-        tokenRepository.deleteByUser(user);
-
-        Token token = new Token();
-        token.setToken(refreshToken);
-        token.setExpiryDate(LocalDateTime.now().plusDays(1));
-        token.setUser(user);
-
-        tokenRepository.save(token);
-    }
-
-    @Transactional
-    public void invalidateRefreshToken(String refreshToken) {
-        tokenRepository.deleteByToken(refreshToken);
-    }
 
 }
