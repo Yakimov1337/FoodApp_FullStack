@@ -26,10 +26,12 @@ public class OpenApiConfig {
                         .addSecuritySchemes("bearer-key",
                                 new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
                 .addSecurityItem(new SecurityRequirement().addList("bearer-key"))
-                .addTagsItem(new Tag().name("1. Authentication").description("Authentication API"))
-                .addTagsItem(new Tag().name("2. User Management").description("User Management API"))
-                .addTagsItem(new Tag().name("3. Order Management").description("Order Management API"))
-                .addTagsItem(new Tag().name("4. Menu Item Management").description("Menu Item Management API"));
+                .addTagsItem(new Tag().name("1. Token Management").description("Token Management API"))
+                .addTagsItem(new Tag().name("2. Authentication").description("Authentication API"))
+                .addTagsItem(new Tag().name("3. User Management").description("User Management API"))
+                .addTagsItem(new Tag().name("4. Order Management").description("Order Management API"))
+                .addTagsItem(new Tag().name("5. Menu Item Management").description("Menu Item Management API"))
+                .addTagsItem(new Tag().name("6. Review Management").description("Review Item Management API"));
     }
 
     @Bean
