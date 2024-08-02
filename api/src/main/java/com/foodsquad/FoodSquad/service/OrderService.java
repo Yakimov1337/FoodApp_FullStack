@@ -44,9 +44,9 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-    private void checkOwnership(String userId) {
+    private void checkOwnership(User owner) {
         User currentUser = getCurrentUser();
-        if (!currentUser.getId().equals(userId) && !currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.getRole().equals(UserRole.MODERATOR)) {
+        if (!currentUser.equals(owner) && !currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.getRole().equals(UserRole.MODERATOR)) {
             throw new IllegalArgumentException("Access denied");
         }
     }
@@ -83,7 +83,9 @@ public class OrderService {
     }
 
     public List<OrderDTO> getOrdersByUserId(String userId, int page, int size) {
-        checkOwnership(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+        checkOwnership(user);
         Pageable pageable = PageRequest.of(page, size);
         Page<Order> orders = orderRepository.findOrdersByUserId(userId, pageable);
         return orders.stream()
@@ -94,6 +96,7 @@ public class OrderService {
     public ResponseEntity<OrderDTO> getOrderById(String id) {
         Order order = orderRepository.findOrderWithUserById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found for ID: " + id));
+        checkOwnership(order.getUser());
         OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
         return ResponseEntity.ok(orderDTO);
     }
@@ -101,7 +104,7 @@ public class OrderService {
     public ResponseEntity<OrderDTO> updateOrder(String id, OrderDTO orderDTO) {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found for ID: " + id));
-
+        checkOwnership(existingOrder.getUser());
         // Update user
         User user = userRepository.findByEmail(orderDTO.getUserEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + orderDTO.getUserEmail()));
@@ -128,16 +131,21 @@ public class OrderService {
     public ResponseEntity<Map<String, String>> deleteOrder(String id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found for ID: " + id));
+        checkOwnership(order.getUser());
         orderRepository.delete(order);
         return ResponseEntity.ok(Map.of("message", "Order successfully deleted"));
     }
 
-
-    private OrderDTO convertToDTO(Order order) {
-        List<Long> menuItemIds = order.getMenuItems().stream()
-                .map(MenuItem::getId)
-                .collect(Collectors.toList());
-        return new OrderDTO(order.getId(), order.getUser().getEmail(), menuItemIds, order.getStatus(),
-                order.getTotalCost(), order.getCreatedOn(), order.getPaid());
+    public ResponseEntity<Map<String, String>> deleteOrders(List<String> ids) {
+        List<Order> orders = orderRepository.findAllById(ids);
+        if (orders.isEmpty()) {
+            throw new EntityNotFoundException("No Orders found for the given IDs");
+        }
+        for (Order order : orders) {
+            checkOwnership(order.getUser());
+        }
+        orderRepository.deleteAll(orders);
+        return ResponseEntity.ok(Map.of("message", "Orders successfully deleted"));
     }
+
 }
