@@ -72,7 +72,7 @@ public class OrderDTO {
 
     @JsonProperty("status")
     public String getStatus() {
-        return status.name().toLowerCase();
+        return status.name();
     }
 
     public void setStatus(@NotNull(message = "Status is required") OrderStatus status) {
