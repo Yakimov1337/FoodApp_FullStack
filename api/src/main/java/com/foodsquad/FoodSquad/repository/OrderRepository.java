@@ -25,5 +25,5 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     @Query("SELECT o FROM Order o JOIN o.user u WHERE u.id = :userId")
     Page<Order> findOrdersByUserId(@Param("userId") String userId, Pageable pageable);
 
-    List<Order> findByCreatedOnBeforeAndStatusNot(LocalDateTime dateTime, OrderStatus status);
+    List<Order> findByCreatedOnBeforeAndStatus(LocalDateTime createdOn, OrderStatus status);
 }

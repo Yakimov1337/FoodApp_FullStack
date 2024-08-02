@@ -17,15 +17,15 @@ public class OrderStatusScheduler {
     private OrderRepository orderRepository;
 
     @Scheduled(cron = "0 0 0 * * *") // Run at midnight every day
-    // If there is an order older than a day, set its status to CANCELLED
+    // If there is an order older than a day and status is PENDING, set its status to CANCELLED
     public void cancelOldOrders() {
         LocalDateTime oneDayAgo = LocalDateTime.now().minusDays(1);
-        List<Order> oldOrders = orderRepository.findByCreatedOnBeforeAndStatusNot(oneDayAgo, OrderStatus.CANCELLED);
+        List<Order> oldPendingOrders = orderRepository.findByCreatedOnBeforeAndStatus(oneDayAgo, OrderStatus.PENDING);
 
-        for (Order order : oldOrders) {
+        for (Order order : oldPendingOrders) {
             order.setStatus(OrderStatus.CANCELLED);
             orderRepository.save(order);
         }
-        System.out.println("Checked and cancelled old orders");
+        System.out.println("Checked and cancelled old pending orders");
     }
 }
