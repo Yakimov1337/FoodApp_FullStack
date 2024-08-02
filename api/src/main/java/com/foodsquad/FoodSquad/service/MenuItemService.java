@@ -5,6 +5,7 @@ import com.foodsquad.FoodSquad.model.dto.OrderDTO;
 import com.foodsquad.FoodSquad.model.entity.*;
 import com.foodsquad.FoodSquad.repository.MenuItemRepository;
 import com.foodsquad.FoodSquad.repository.OrderRepository;
+import com.foodsquad.FoodSquad.repository.ReviewRepository;
 import com.foodsquad.FoodSquad.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
@@ -34,10 +35,13 @@ public class MenuItemService {
     private OrderRepository orderRepository;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private ReviewRepository reviewRepository;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
     private User getCurrentUser() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -69,9 +73,13 @@ public class MenuItemService {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MenuItem not found for ID: " + id));
         int salesCount = orderRepository.countByMenuItemId(menuItem.getId());
-        MenuItemDTO menuItemDTO = new MenuItemDTO(menuItem, salesCount);
+        long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
+        double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+        averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
+        MenuItemDTO menuItemDTO = new MenuItemDTO(menuItem, salesCount, reviewCount, averageRating);
         return ResponseEntity.ok(menuItemDTO);
     }
+
 
     public List<MenuItemDTO> getAllMenuItems(int page, int limit, String sortBy, boolean desc) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -79,7 +87,10 @@ public class MenuItemService {
         List<MenuItemDTO> menuItems = menuItemPage.stream()
                 .map(menuItem -> {
                     int salesCount = orderRepository.countByMenuItemId(menuItem.getId());
-                    return new MenuItemDTO(menuItem, salesCount);
+                    long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
+                    double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+                    averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
+                    return new MenuItemDTO(menuItem, salesCount, reviewCount, averageRating);
                 })
                 .collect(Collectors.toList());
 
@@ -133,9 +144,25 @@ public class MenuItemService {
         List<MenuItemDTO> menuItemDTOs = menuItems.stream()
                 .map(menuItem -> {
                     int salesCount = orderRepository.countByMenuItemId(menuItem.getId());
-                    return new MenuItemDTO(menuItem, salesCount);
+                    long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
+                    double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+                    averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
+                    return new MenuItemDTO(menuItem, salesCount, reviewCount, averageRating);
                 })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(menuItemDTOs);
+    }
+
+    // Method to delete multiple menu items by their IDs
+    public ResponseEntity<Map<String, String>> deleteMenuItemsByIds(List<Long> ids) {
+        List<MenuItem> menuItems = menuItemRepository.findAllById(ids);
+        if (menuItems.isEmpty()) {
+            throw new EntityNotFoundException("No MenuItems found for the given IDs");
+        }
+        menuItems.forEach(menuItem -> {
+            checkOwnership(menuItem);
+            menuItemRepository.delete(menuItem);
+        });
+        return ResponseEntity.ok(Map.of("message", "Menu Items successfully deleted"));
     }
 }
