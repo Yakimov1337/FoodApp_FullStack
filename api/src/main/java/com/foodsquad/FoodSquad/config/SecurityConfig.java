@@ -48,18 +48,18 @@ public class SecurityConfig {
                                 // Order controller endpoints
                                 .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("ADMIN", "MODERATOR", "NORMAL")
                                 .requestMatchers(HttpMethod.POST, "/api/orders/**").hasAnyRole("ADMIN", "MODERATOR", "NORMAL")
-                                .requestMatchers(HttpMethod.PUT, "/api/orders/**").hasAnyRole("ADMIN", "MODERATOR", "NORMAL")
-                                .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasAnyRole("ADMIN", "MODERATOR")
+                                .requestMatchers(HttpMethod.PUT, "/api/orders/**").hasAnyRole("ADMIN", "MODERATOR")
+                                .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasAnyRole("ADMIN")
                                 // MenuItem controller endpoints
                                 .requestMatchers(HttpMethod.GET, "/api/menu-items/**").hasAnyRole("ADMIN", "MODERATOR", "NORMAL")
                                 .requestMatchers(HttpMethod.POST, "/api/menu-items/**").hasAnyRole("ADMIN", "MODERATOR")
                                 .requestMatchers(HttpMethod.PUT, "/api/menu-items/**").hasAnyRole("ADMIN", "MODERATOR")
-                                .requestMatchers(HttpMethod.DELETE, "/api/menu-items/**").hasAnyRole("ADMIN", "MODERATOR")
+                                .requestMatchers(HttpMethod.DELETE, "/api/menu-items/**").hasAnyRole("ADMIN")
                                 // Reviews controller endpoints
                                 .requestMatchers(HttpMethod.GET, "/api/reviews/**").hasAnyRole("ADMIN", "MODERATOR", "NORMAL")
                                 .requestMatchers(HttpMethod.POST, "/api/reviews/**").hasAnyRole("ADMIN", "MODERATOR", "NORMAL")
                                 .requestMatchers(HttpMethod.PUT, "/api/reviews/**").hasAnyRole("ADMIN", "MODERATOR")
-                                .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyRole("ADMIN", "MODERATOR")
+                                .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling ->
