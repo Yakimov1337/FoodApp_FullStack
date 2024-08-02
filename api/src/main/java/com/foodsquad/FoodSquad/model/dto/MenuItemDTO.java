@@ -27,7 +27,7 @@ public class MenuItemDTO {
     @Schema(defaultValue = "https://www.tastingtable.com/img/gallery/what-makes-restaurant-burgers-taste-different-from-homemade-burgers-upgrade/l-intro-1662064407.jpg")
     private String imageUrl;
 
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Boolean defaultItem;
 
     @NotNull(message = "Price cannot be null")
@@ -43,12 +43,18 @@ public class MenuItemDTO {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Integer salesCount;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long reviewCount;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Double averageRating;
+
     // Default constructor
     public MenuItemDTO() {
     }
 
     // Constructor to create DTO from MenuItem entity
-    public MenuItemDTO(MenuItem menuItem, int salesCount) {
+    public MenuItemDTO(MenuItem menuItem, int salesCount, long reviewCount, double averageRating) {
         this.id = menuItem.getId();
         this.title = menuItem.getTitle();
         this.description = menuItem.getDescription();
@@ -57,9 +63,12 @@ public class MenuItemDTO {
         this.price = menuItem.getPrice();
         this.category = menuItem.getCategory();
         this.salesCount = salesCount;
+        this.reviewCount = reviewCount;
+        this.averageRating = averageRating;
     }
 
     // getters and setters
+
 
     public Long getId() {
         return id;
@@ -123,5 +132,21 @@ public class MenuItemDTO {
 
     public void setSalesCount(Integer salesCount) {
         this.salesCount = salesCount;
+    }
+
+    public Long getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(Long reviewCount) {
+        this.reviewCount = reviewCount;
+    }
+
+    public Double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(Double averageRating) {
+        this.averageRating = averageRating;
     }
 }
