@@ -4,6 +4,7 @@ import com.foodsquad.FoodSquad.model.dto.UserLoginDTO;
 import com.foodsquad.FoodSquad.model.dto.UserRegistrationDTO;
 import com.foodsquad.FoodSquad.model.dto.UserResponseDTO;
 import com.foodsquad.FoodSquad.service.AuthService;
+import com.foodsquad.FoodSquad.service.TokenService;
 import com.foodsquad.FoodSquad.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@Tag(name = "1. Authentication", description = "Authentication API")
+@Tag(name = "2. Authentication", description = "Authentication API")
 @Validated
 @RestController
 @RequestMapping("/api/auth")
@@ -33,6 +34,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private TokenService tokenService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -67,7 +71,7 @@ public class AuthController {
         String accessToken = jwtUtil.generateToken(claims, user.getEmail(), accessTokenExpiration);
         String refreshToken = jwtUtil.generateToken(claims, user.getEmail(), refreshTokenExpiration);
 
-        authService.saveRefreshToken(user.getEmail(), refreshToken);
+        tokenService.saveRefreshToken(user.getEmail(), refreshToken);
 
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
         refreshTokenCookie.setHttpOnly(true);
@@ -78,58 +82,6 @@ public class AuthController {
 
         Map<String, String> tokens = new HashMap<>();
         tokens.put("accessToken", accessToken);
-
-        return ResponseEntity.ok(tokens);
-    }
-
-    @PostMapping("/refresh-token")
-    public ResponseEntity<Map<String, String>> refreshToken(@CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
-        String email;
-        try {
-            email = jwtUtil.extractClaims(refreshToken).getSubject();
-        } catch (ExpiredJwtException e) {
-            logger.error("Refresh token has expired: {}", refreshToken);
-            throw e;
-        } catch (JwtException e) {
-            logger.error("Failed to extract claims from refresh token: {}", refreshToken);
-            throw e;
-        } catch (Exception e) {
-            logger.error("An unexpected error occurred while extracting claims from refresh token: {}", refreshToken);
-            throw e;
-        }
-
-        UserDetails userDetails = authService.loadUserByUsername(email);
-
-        if (!jwtUtil.validateToken(refreshToken, userDetails)) {
-            logger.warn("Refresh token validation failed for user: {}", email);
-            throw new JwtException("Invalid refresh token");
-        }
-
-        if (!authService.isRefreshTokenValid(email, refreshToken)) {
-            logger.warn("Refresh token is not present in the database for user: {}", email);
-            throw new JwtException("Invalid refresh token");
-        }
-
-        Map<String, Object> claims = jwtUtil.extractClaims(refreshToken);
-
-        String newAccessToken = jwtUtil.generateToken(claims, email, accessTokenExpiration);
-        String newRefreshToken = jwtUtil.generateToken(claims, email, refreshTokenExpiration);
-
-        // Invalidate the old refresh token
-        authService.invalidateRefreshToken(refreshToken);
-
-        // Save the new refresh token
-        authService.saveRefreshToken(email, newRefreshToken);
-
-        Cookie refreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge((int) refreshTokenExpiration / 1000);
-        response.addCookie(refreshTokenCookie);
-
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", newAccessToken);
 
         return ResponseEntity.ok(tokens);
     }
