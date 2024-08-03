@@ -1,9 +1,9 @@
 package com.foodsquad.FoodSquad.model.entity;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 @Entity
 @Table(name = "orders")
@@ -14,7 +14,7 @@ public class Order {
     private String id;
 
     @Column(nullable = false)
-    private Integer totalCost;
+    private Double totalCost;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -26,13 +26,11 @@ public class Order {
     @Column(nullable = false)
     private Boolean paid = false;
 
-    @ManyToMany
-    @JoinTable(
-            name = "order_menu_item",
-            joinColumns = @JoinColumn(name = "order_id"),
-            inverseJoinColumns = @JoinColumn(name = "menu_item_id"))
-    @Column(nullable = false)
-    private List<MenuItem> menuItems;
+    @ElementCollection
+    @CollectionTable(name = "order_menu_item", joinColumns = @JoinColumn(name = "order_id"))
+    @MapKeyJoinColumn(name = "menu_item_id")
+    @Column(name = "quantity")
+    private Map<MenuItem, Integer> menuItemsWithQuantity;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -47,11 +45,11 @@ public class Order {
         this.id = id;
     }
 
-    public Integer getTotalCost() {
+    public Double getTotalCost() {
         return totalCost;
     }
 
-    public void setTotalCost(Integer totalCost) {
+    public void setTotalCost(Double totalCost) {
         this.totalCost = totalCost;
     }
 
@@ -71,15 +69,12 @@ public class Order {
         this.createdOn = createdOn;
     }
 
-    public List<MenuItem> getMenuItems() {
-        return menuItems;
+    public Map<MenuItem, Integer> getMenuItemsWithQuantity() {
+        return menuItemsWithQuantity;
     }
 
-    public void setMenuItems(List<MenuItem> menuItems) {
-        if (menuItems == null || menuItems.isEmpty()) {
-            throw new IllegalArgumentException("Order must contain at least one MenuItem");
-        }
-        this.menuItems = menuItems;
+    public void setMenuItemsWithQuantity(Map<MenuItem, Integer> menuItemsWithQuantity) {
+        this.menuItemsWithQuantity = menuItemsWithQuantity;
     }
 
     public User getUser() {

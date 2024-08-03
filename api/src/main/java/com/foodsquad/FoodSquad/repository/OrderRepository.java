@@ -13,8 +13,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, String> {
-    @Query("SELECT COUNT(o) FROM Order o JOIN o.menuItems mi WHERE mi.id = :menuItemId")
-    int countByMenuItemId(@Param("menuItemId") Long menuItemId);
+
+    @Query(value = "SELECT SUM(quantity) FROM order_menu_item WHERE menu_item_id = :menuItemId", nativeQuery = true)
+    Integer sumQuantityByMenuItemId(@Param("menuItemId") Long menuItemId);
 
     @Query("SELECT o FROM Order o JOIN o.user u")
     Page<Order> findAllOrdersWithUsers(Pageable pageable);
