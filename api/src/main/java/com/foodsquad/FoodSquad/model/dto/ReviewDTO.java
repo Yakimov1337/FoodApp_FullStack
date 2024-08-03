@@ -35,6 +35,10 @@ public class ReviewDTO {
     @Schema(description = "Email of the user who wrote the review", example = "user@example.com")
     private String userEmail;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Schema(description = "Image URL of the user who wrote the review", example = "https://example.com/image.jpg")
+    private String imageUrl;
+
     public String getUserEmail() {
         return userEmail;
     }
@@ -82,4 +86,13 @@ public class ReviewDTO {
     public void setCreatedOn(LocalDateTime createdOn) {
         this.createdOn = createdOn;
     }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
 }
