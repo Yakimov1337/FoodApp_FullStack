@@ -4,6 +4,8 @@ import com.foodsquad.FoodSquad.service.AuthService;
 import com.foodsquad.FoodSquad.service.TokenService;
 import com.foodsquad.FoodSquad.util.JwtUtil;
 import io.jsonwebtoken.JwtException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +43,11 @@ public class TokenController {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
+    @Operation(summary = "Refresh JWT token", description = "Refresh the JWT access token using the refresh token.")
     @PostMapping("/refresh")
-    public ResponseEntity<Map<String, String>> refreshToken(@CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> refreshToken(
+            @Parameter(description = "Refresh token stored in cookie, no need to be valid input, browser will handle it!", required = true)
+            @CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
         String email;
         try {
             email = jwtUtil.extractClaims(refreshToken).getSubject();

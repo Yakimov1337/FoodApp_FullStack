@@ -8,6 +8,8 @@ import com.foodsquad.FoodSquad.service.TokenService;
 import com.foodsquad.FoodSquad.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -47,8 +49,11 @@ public class AuthController {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
+    @Operation(summary = "User registration", description = "Register a new user with the provided registration details.")
     @PostMapping("/sign-up")
-    public ResponseEntity<UserResponseDTO> registerUser(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO) {
+    public ResponseEntity<UserResponseDTO> registerUser(
+            @Parameter(description = "User registration details", required = true)
+            @Valid @RequestBody UserRegistrationDTO userRegistrationDTO) {
         if (!userRegistrationDTO.getPassword().equals(userRegistrationDTO.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
         }
@@ -56,8 +61,12 @@ public class AuthController {
         return ResponseEntity.ok(user);
     }
 
+    @Operation(summary = "User login", description = "Authenticate a user with the provided login credentials.")
     @PostMapping("/sign-in")
-    public ResponseEntity<Map<String, String>> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> loginUser(
+            @Parameter(description = "User login details", required = true)
+            @Valid @RequestBody UserLoginDTO userLoginDTO,
+            HttpServletResponse response) {
         UserResponseDTO user = authService.loginUser(userLoginDTO);
 
         Map<String, Object> claims = new HashMap<>();
