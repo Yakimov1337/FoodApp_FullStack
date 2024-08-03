@@ -2,8 +2,6 @@ package com.foodsquad.FoodSquad.model.entity;
 
 import jakarta.persistence.*;
 
-import java.util.List;
-
 @Entity
 @Table(name = "menu_items")
 public class MenuItem {
