@@ -72,7 +72,10 @@ public class MenuItemService {
     public ResponseEntity<MenuItemDTO> getMenuItemById(Long id) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MenuItem not found for ID: " + id));
-        int salesCount = orderRepository.countByMenuItemId(menuItem.getId());
+        Integer salesCount = orderRepository.sumQuantityByMenuItemId(menuItem.getId());
+        if (salesCount == null) {
+            salesCount = 0;
+        }
         long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
         double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
         averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
@@ -81,18 +84,47 @@ public class MenuItemService {
     }
 
 
-    public List<MenuItemDTO> getAllMenuItems(int page, int limit, String sortBy, boolean desc) {
+    public List<MenuItemDTO> getAllMenuItems(int page, int limit, String sortBy, boolean desc, String categoryFilter, String isDefault, String priceSortDirection) {
         Pageable pageable = PageRequest.of(page, limit);
-        Page<MenuItem> menuItemPage = menuItemRepository.findAll(pageable);
+        Page<MenuItem> menuItemPage;
+
+        // Filter by item category
+        if (categoryFilter != null && !categoryFilter.isEmpty()) {
+            MenuItemCategory category = MenuItemCategory.valueOf(categoryFilter.toUpperCase());
+            menuItemPage = menuItemRepository.findByCategory(category, pageable);
+        } else {
+            menuItemPage = menuItemRepository.findAll(pageable);
+        }
+
         List<MenuItemDTO> menuItems = menuItemPage.stream()
                 .map(menuItem -> {
-                    int salesCount = orderRepository.countByMenuItemId(menuItem.getId());
+                    Integer salesCount = orderRepository.sumQuantityByMenuItemId(menuItem.getId());
+                    if (salesCount == null) {
+                        salesCount = 0;
+                    }
                     long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
                     double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
                     averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
                     return new MenuItemDTO(menuItem, salesCount, reviewCount, averageRating);
                 })
                 .collect(Collectors.toList());
+
+        // Filter by default item
+        if (isDefault != null && !isDefault.isEmpty()) {
+            boolean defaultFlag = isDefault.equalsIgnoreCase("true");
+            menuItems = menuItems.stream().filter(item -> item.getDefaultItem().equals(defaultFlag)).collect(Collectors.toList());
+        }
+
+        // Sort by price
+        if (priceSortDirection != null && !priceSortDirection.isEmpty()) {
+            menuItems.sort((a, b) -> {
+                if (priceSortDirection.equals("asc")) {
+                    return Double.compare(a.getPrice(), b.getPrice());
+                } else {
+                    return Double.compare(b.getPrice(), a.getPrice());
+                }
+            });
+        }
 
         // Sort by salesCount if specified (workaround for now)
         if ("salesCount".equals(sortBy)) {
@@ -103,6 +135,7 @@ public class MenuItemService {
 
         return menuItems;
     }
+
 
 
     public ResponseEntity<MenuItemDTO> updateMenuItem(Long id, MenuItemDTO menuItemDTO) {
@@ -143,7 +176,10 @@ public class MenuItemService {
         }
         List<MenuItemDTO> menuItemDTOs = menuItems.stream()
                 .map(menuItem -> {
-                    int salesCount = orderRepository.countByMenuItemId(menuItem.getId());
+                    Integer salesCount = orderRepository.sumQuantityByMenuItemId(menuItem.getId());
+                    if (salesCount == null) {
+                        salesCount = 0;
+                    }
                     long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
                     double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
                     averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
