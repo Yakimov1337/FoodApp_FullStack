@@ -32,6 +32,7 @@ public class MenuItemDTO {
 
     @NotNull(message = "Price cannot be null")
     @Positive(message = "Price must be positive")
+    @Schema(defaultValue = "1", required = true)
     private Double price;
 
     @NotNull(message = "Category cannot be null")
