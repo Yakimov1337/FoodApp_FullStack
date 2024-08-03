@@ -150,6 +150,7 @@ public class OrderService {
         // Update other fields
         existingOrder.setStatus(OrderStatus.valueOf(orderDTO.getStatus().toUpperCase()));
         existingOrder.setTotalCost(roundedTotalCost.doubleValue());
+        existingOrder.setCreatedOn(orderDTO.getCreatedOn());
         existingOrder.setPaid(orderDTO.getPaid());
 
         orderRepository.save(existingOrder);
