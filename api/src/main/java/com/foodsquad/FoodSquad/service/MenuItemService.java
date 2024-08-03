@@ -1,8 +1,10 @@
 package com.foodsquad.FoodSquad.service;
 
 import com.foodsquad.FoodSquad.model.dto.MenuItemDTO;
-import com.foodsquad.FoodSquad.model.dto.OrderDTO;
-import com.foodsquad.FoodSquad.model.entity.*;
+import com.foodsquad.FoodSquad.model.entity.MenuItem;
+import com.foodsquad.FoodSquad.model.entity.MenuItemCategory;
+import com.foodsquad.FoodSquad.model.entity.User;
+import com.foodsquad.FoodSquad.model.entity.UserRole;
 import com.foodsquad.FoodSquad.repository.MenuItemRepository;
 import com.foodsquad.FoodSquad.repository.OrderRepository;
 import com.foodsquad.FoodSquad.repository.ReviewRepository;
@@ -22,7 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,12 +79,14 @@ public class MenuItemService {
             salesCount = 0;
         }
         long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
-        double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+        Double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+        if (averageRating == null) {
+            averageRating = 0.0; // Default to 0.0 if there are no reviews
+        }
         averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
         MenuItemDTO menuItemDTO = new MenuItemDTO(menuItem, salesCount, reviewCount, averageRating);
         return ResponseEntity.ok(menuItemDTO);
     }
-
 
     public List<MenuItemDTO> getAllMenuItems(int page, int limit, String sortBy, boolean desc, String categoryFilter, String isDefault, String priceSortDirection) {
         Pageable pageable = PageRequest.of(page, limit);
@@ -103,7 +107,10 @@ public class MenuItemService {
                         salesCount = 0;
                     }
                     long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
-                    double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+                    Double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+                    if (averageRating == null) {
+                        averageRating = 0.0; // Default to 0.0 if there are no reviews
+                    }
                     averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
                     return new MenuItemDTO(menuItem, salesCount, reviewCount, averageRating);
                 })
@@ -135,8 +142,6 @@ public class MenuItemService {
 
         return menuItems;
     }
-
-
 
     public ResponseEntity<MenuItemDTO> updateMenuItem(Long id, MenuItemDTO menuItemDTO) {
         MenuItem existingMenuItem = menuItemRepository.findById(id)
@@ -181,7 +186,10 @@ public class MenuItemService {
                         salesCount = 0;
                     }
                     long reviewCount = reviewRepository.countByMenuItemId(menuItem.getId());
-                    double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+                    Double averageRating = reviewRepository.findAverageRatingByMenuItemId(menuItem.getId());
+                    if (averageRating == null) {
+                        averageRating = 0.0; // Default to 0.0 if there are no reviews
+                    }
                     averageRating = Math.round(averageRating * 10.0) / 10.0; // Format to 1 decimal place
                     return new MenuItemDTO(menuItem, salesCount, reviewCount, averageRating);
                 })
