@@ -14,14 +14,15 @@ public class UserResponseDTO {
     @Schema(description = "Unique identifier of the user", example = "123e4567-e89b-12d3-a456-426614174000")
     private String id;
 
-    @NotBlank(message = "Name is required")
+//    @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
-    @Schema(description = "Name of the user", example = "John Doe", required = true)
+    @Schema(description = "Name of the user", example = "John Doe")
     private String name;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    @Schema(description = "Email address of the user", example = "john.doe@example.com", required = true)
+//    @NotBlank(message = "Email is required")
+//    @Email(message = "Email should be valid")
+    @Schema(description = "Email address of the user", example = "john.doe@example.com")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String email;
 
     @NotBlank(message = "Role is required")
@@ -31,10 +32,14 @@ public class UserResponseDTO {
     @Schema(description = "URL of the user's profile image", example = "http://example.com/image.jpg")
     private String imageUrl;
 
-    @NotBlank(message = "Phone number is required")
+//    @NotBlank(message = "Phone number is required")
     @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Phone number is invalid")
-    @Schema(description = "Phone number of the user", example = "+359 899 78 7878", required = true)
+    @Schema(description = "Phone number of the user", example = "+359 899 78 7878")
     private String phoneNumber;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Schema(description = "Number of orders placed by the user", example = "10")
+    private long ordersCount;
 
     public UserResponseDTO() {
         // Default constructor
@@ -95,5 +100,8 @@ public class UserResponseDTO {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+    public void setOrdersCount(long ordersCount) {
+        this.ordersCount = ordersCount;
     }
 }
