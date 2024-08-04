@@ -44,9 +44,9 @@ public class TokenController {
     private long refreshTokenExpiration;
 
     @Operation(summary = "Refresh JWT token", description = "Refresh the JWT access token using the refresh token.")
-    @PostMapping("/refresh")
+    @PostMapping("/refresh-token")
     public ResponseEntity<Map<String, String>> refreshToken(
-            @Parameter(description = "Refresh token stored in cookie, no need to be valid input, browser will handle it!", required = true)
+            @Parameter(description = "Refresh token stored in cookie, no need to be valid input, browser will handle it!", example = "123", required = true)
             @CookieValue("refreshToken") String refreshToken, HttpServletResponse response) {
         String email;
         try {
@@ -73,8 +73,8 @@ public class TokenController {
         String newAccessToken = jwtUtil.generateToken(claims, email, accessTokenExpiration);
         String newRefreshToken = jwtUtil.generateToken(claims, email, refreshTokenExpiration);
 
-        tokenService.invalidateRefreshToken(refreshToken);
-        tokenService.saveRefreshToken(email, newRefreshToken);
+        tokenService.invalidateTokens(null, refreshToken); // Invalidate only the refresh token here
+        tokenService.saveTokens(email, newAccessToken, newRefreshToken);
 
         Cookie refreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
         refreshTokenCookie.setHttpOnly(true);
