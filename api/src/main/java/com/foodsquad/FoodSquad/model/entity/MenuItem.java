@@ -2,6 +2,8 @@ package com.foodsquad.FoodSquad.model.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "menu_items")
 public class MenuItem {
@@ -32,6 +34,15 @@ public class MenuItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdOn;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdOn = LocalDateTime.now();
+    }
+
 
     public Long getId() {
         return id;
@@ -96,5 +107,13 @@ public class MenuItem {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public LocalDateTime getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(LocalDateTime createdOn) {
+        this.createdOn = createdOn;
     }
 }
