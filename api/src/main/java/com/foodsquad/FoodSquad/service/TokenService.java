@@ -28,28 +28,34 @@ public class TokenService {
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        Optional<Token> token = tokenRepository.findByUserAndToken(user, refreshToken);
+        Optional<Token> token = tokenRepository.findByUserAndRefreshToken(user, refreshToken);
         return token.isPresent();
     }
 
     @Transactional
-    public void saveRefreshToken(String username, String refreshToken) {
+    public void saveTokens(String username, String accessToken, String refreshToken) {
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        //End all other sessions
+        // End all other sessions
         tokenRepository.deleteByUser(user);
 
         Token token = new Token();
-        token.setToken(refreshToken);
-        token.setExpiryDate(LocalDateTime.now().plusDays(1));
+        token.setAccessToken(accessToken);
+        token.setRefreshToken(refreshToken);
+        token.setExpiryDate(LocalDateTime.now().plusDays(7));
         token.setUser(user);
 
         tokenRepository.save(token);
     }
 
     @Transactional
-    public void invalidateRefreshToken(String refreshToken) {
-        tokenRepository.deleteByToken(refreshToken);
+    public void invalidateTokens(String accessToken, String refreshToken) {
+        if (accessToken != null) {
+            tokenRepository.deleteByAccessToken(accessToken);
+        }
+        if (refreshToken != null) {
+            tokenRepository.deleteByRefreshToken(refreshToken);
+        }
     }
 }
