@@ -86,65 +86,6 @@ public class DatabaseSeeder {
         System.out.println("Users seeded successfully.");
     }
 
-//    private void seedMenuItems() {
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            ClassPathResource resource = new ClassPathResource("menu_batch.json");
-//            InputStream inputStream = resource.getInputStream();
-//
-//
-//            // Check if the file exists
-//            if (!resource.exists()) {
-//                System.out.println("File not found: menu_batch.json");
-//                return;
-//            }
-//
-//            // Read the JSON array from the file
-//            JsonNode rootNode = objectMapper.readTree(inputStream);
-//            List<MenuItem> menuItems = new ArrayList<>();
-//
-//            // Retrieve users
-//            User adminUser = userRepository.findByEmail("admin@example.com").orElse(null);
-//            User moderator = userRepository.findByEmail("moderator@example.com").orElse(null);
-//
-//            if (adminUser == null || moderator == null) {
-//                System.out.println("Admin or Moderator user not found. Cannot seed menu items.");
-//                return;
-//            }
-//
-//            // Iterate over each element in the JSON array
-//            for (JsonNode node : rootNode) {
-//                String title = node.get("title").asText();
-//                String description = node.get("description").asText();
-//                String imageUrl = node.get("imageUrl").asText();
-//                double price = node.get("price").asDouble();
-//                boolean defaultItem = node.get("defaultItem").asBoolean();
-//                String categoryText = node.get("category").asText();
-//                String creatorField = node.get("creator").asText();
-//
-//                MenuItemCategory category;
-//                try {
-//                    category = MenuItemCategory.valueOf(categoryText.toUpperCase());
-//                } catch (IllegalArgumentException e) {
-//                    System.out.println("Invalid category: " + categoryText);
-//                    continue; // Skip this item if category is invalid
-//                }
-//
-//                User creator = creatorField.equalsIgnoreCase("adminUser") ? adminUser : moderator;
-//
-//                MenuItem menuItem = createMenuItem(title, description, imageUrl, price,defaultItem, category, creator);
-//                menuItems.add(menuItem);
-//            }
-//
-//            // Save all menu items to the repository
-//            menuItemRepository.saveAll(menuItems);
-//            System.out.println("Menu items seeded successfully.");
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
     private void seedMenuItems() {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -195,6 +136,7 @@ public class DatabaseSeeder {
             }
 
             // Save all menu items to the repository
+            Collections.reverse(menuItems); // Reverse the menuItems list before saving
             menuItemRepository.saveAll(menuItems);
             System.out.println("Menu items seeded successfully.");
 
@@ -209,16 +151,16 @@ public class DatabaseSeeder {
 
         // Example data: Creating orders with quantities for seeding
         Map<Long, Integer> order1Items = new HashMap<>();
-        order1Items.put(7L, 5); // 5 of MenuItem with ID 7
-        order1Items.put(1L, 4); // 2 of MenuItem with ID 1
+        order1Items.put(58L, 5); // 5 of MenuItem with ID 58
+        order1Items.put(64L, 4); // 4 of MenuItem with ID 64
 
         Map<Long, Integer> order2Items = new HashMap<>();
-        order2Items.put(9L, 3); // 3 of MenuItem with ID 9
-        order2Items.put(18L, 21); // 21 of MenuItem with ID 1
+        order2Items.put(56L, 3); // 3 of MenuItem with ID 56
+        order2Items.put(47L, 21); // 21 of MenuItem with ID 47
 
         Map<Long, Integer> order3Items = new HashMap<>();
-        order3Items.put(4L, 1); // 1 of MenuItem with ID 4
-        order3Items.put(18L, 3); // 3 of MenuItem with ID 18
+        order3Items.put(61L, 1); // 1 of MenuItem with ID 61
+        order3Items.put(47L, 3); // 3 of MenuItem with ID 47
 
         orders.add(createOrder(OrderStatus.COMPLETED, LocalDateTime.now().minusDays(5), userRepository.findByEmail("moderator@example.com").get(), true, order1Items));
         orders.add(createOrder(OrderStatus.PENDING, LocalDateTime.now().minusDays(3), userRepository.findByEmail("jane.smith@example.com").get(), false, order2Items));
