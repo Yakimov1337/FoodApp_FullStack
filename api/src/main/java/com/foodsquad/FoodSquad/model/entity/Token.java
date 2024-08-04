@@ -10,8 +10,11 @@ public class Token {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 512)
-    private String token;
+    @Column(name = "access_token", columnDefinition = "TEXT")
+    private String accessToken;
+
+    @Column(name = "refresh_token", columnDefinition = "TEXT")
+    private String refreshToken;
 
     @Column(nullable = false)
     private LocalDateTime expiryDate;
@@ -28,12 +31,20 @@ public class Token {
         this.id = id;
     }
 
-    public String getToken() {
-        return token;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
     public LocalDateTime getExpiryDate() {
