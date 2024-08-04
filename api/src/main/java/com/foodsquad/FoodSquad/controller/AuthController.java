@@ -80,7 +80,7 @@ public class AuthController {
         String accessToken = jwtUtil.generateToken(claims, user.getEmail(), accessTokenExpiration);
         String refreshToken = jwtUtil.generateToken(claims, user.getEmail(), refreshTokenExpiration);
 
-        tokenService.saveRefreshToken(user.getEmail(), refreshToken);
+        tokenService.saveTokens(user.getEmail(), accessToken, refreshToken);
 
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
         refreshTokenCookie.setHttpOnly(true);
@@ -93,5 +93,39 @@ public class AuthController {
         tokens.put("accessToken", accessToken);
 
         return ResponseEntity.ok(tokens);
+    }
+
+    @Operation(summary = "Logout user", description = "Invalidate the refresh token and logout the user.")
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logoutUser(
+            @Parameter(description = "Access token stored in header", required = true)
+            @RequestHeader("Authorization") String accessTokenHeader,
+            @Parameter(description = "Refresh token stored in cookie", required = true)
+            @CookieValue("refreshToken") String refreshToken,
+            HttpServletResponse response) {
+        String accessToken = accessTokenHeader.replace("Bearer ", "");
+
+        String email;
+        try {
+            email = jwtUtil.extractClaims(refreshToken).getSubject();
+        } catch (JwtException e) {
+            logger.error("Failed to extract claims from refresh token: {}", refreshToken);
+            throw e;
+        }
+
+        tokenService.invalidateTokens(accessToken, refreshToken);
+
+        // Clear refresh token cookie
+        Cookie refreshTokenCookie = new Cookie("refreshToken", null);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(0);
+        response.addCookie(refreshTokenCookie);
+
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("message", "Successfully logged out");
+
+        return ResponseEntity.ok(responseMap);
     }
 }
