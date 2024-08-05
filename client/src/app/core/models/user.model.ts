@@ -3,14 +3,26 @@ import { MenuItem } from './food-menu-item.model';
 import { Order } from './order.model';
 
 export interface User {
-  accountId: string;
-  $id?: string;
+  id: string;
   name: string;
   email: string;
   imageUrl: URL;
   phoneNumber: string;
   role: Role;
-  orders: Order[];
+  ordersCount?: number;
+}
+
+export interface UserResponse extends User {
+
+}
+
+export interface UserClaims {
+  id: string;
+  name: string;
+  email: string;
+  imageUrl: URL;
+  phoneNumber: string;
+  role: Role;
 }
 export interface AuthState {
   isAuthenticated: boolean;

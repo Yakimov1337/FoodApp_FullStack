@@ -1,23 +1,18 @@
-import { MenuItem } from "./food-menu-item.model";
-import { User } from "./user.model";
-
 export interface Order {
-  $id: string;
-  user: User;
-  menuItems: MenuItem[];
+  id: string;
+  userEmail: string;
+  menuItemQuantities: { [menuItemId: number]: number }; // Object with menuItemId as key and quantity as value
   totalCost: number;
   createdOn: Date;
-  paid: boolean,
-  status: 'pending' | 'completed' | 'cancelled';
+  paid: boolean;
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
 }
-
 
 // New OrderSubmission model for API submission
 export interface OrderSubmission {
-  user: string; // User ID as a string
-  menuItems: string[]; // Array of MenuItem IDs as strings
-  totalCost: number;
+  userEmail: string;
+  menuItemQuantities: { [menuItemId: number]: number }; // Object with menuItemId as key and quantity as value
   createdOn: string;
   paid: boolean;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
 }
