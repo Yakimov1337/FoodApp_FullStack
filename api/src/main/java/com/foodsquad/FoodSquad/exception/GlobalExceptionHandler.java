@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -56,9 +57,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Map<String, String>> handleAllUncaughtException(Exception ex) {
+        if (ex instanceof MissingRequestCookieException) {
+            return handleMissingRequestCookieException((MissingRequestCookieException) ex);
+        }
+
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "An unexpected error occurred: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errors);
+    }
+
+    private ResponseEntity<Map<String, String>> handleMissingRequestCookieException(MissingRequestCookieException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", "Refresh token is missing. Please log in again.");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errors);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -85,6 +96,7 @@ public class GlobalExceptionHandler {
         errors.put("error", errorMessage);
         return ResponseEntity.badRequest().body(errors);
     }
+
 
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<Map<String, String>> handleJwtException(JwtException ex) {

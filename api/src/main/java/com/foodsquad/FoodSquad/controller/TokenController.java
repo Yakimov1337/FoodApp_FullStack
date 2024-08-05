@@ -11,8 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.Cookie;
@@ -58,14 +60,15 @@ public class TokenController {
 
         UserDetails userDetails = authService.loadUserByUsername(email);
 
+
         if (!jwtUtil.validateToken(refreshToken, userDetails)) {
             logger.warn("Refresh token validation failed for user: {}", email);
-            throw new JwtException("Invalid refresh token");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Invalid refresh token"));
         }
 
         if (!tokenService.isRefreshTokenValid(email, refreshToken)) {
             logger.warn("Refresh token is not present in the database for user: {}", email);
-            throw new JwtException("Invalid refresh token");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Refresh token not found"));
         }
 
         Map<String, Object> claims = jwtUtil.extractClaims(refreshToken);
@@ -74,7 +77,7 @@ public class TokenController {
         String newRefreshToken = jwtUtil.generateToken(claims, email, refreshTokenExpiration);
 
         tokenService.invalidateTokens(null, refreshToken); // Invalidate only the refresh token here
-        tokenService.saveTokens(email, newAccessToken, newRefreshToken);
+        tokenService.saveTokens(email, newAccessToken, newRefreshToken); // Save new access and refresh tokens
 
         Cookie refreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
         refreshTokenCookie.setHttpOnly(true);
@@ -87,5 +90,12 @@ public class TokenController {
         tokens.put("accessToken", newAccessToken);
 
         return ResponseEntity.ok(tokens);
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<Map<String, String>> handleMissingRequestCookieException(MissingRequestCookieException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", "Refresh token is missing. Please log in again.");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errors);
     }
 }
