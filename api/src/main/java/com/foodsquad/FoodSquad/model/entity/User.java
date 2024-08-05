@@ -18,7 +18,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String name;
+    private String name = "Default Name";
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -33,7 +33,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String imageUrl = "https://www.pngarts.com/files/11/Avatar-Transparent-Images.png";
 
-    private String phoneNumber;
+    private String phoneNumber = "000-000-0000";
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdOn;
