@@ -8,6 +8,11 @@ export const selectIsCreateMenuItemModalOpen = createSelector(
   (state: ModalState) => state.createMenuItem
 );
 
+export const selectIsUserReviewsModalOpen = createSelector(
+  selectMenuItemModalState,
+  (state: ModalState) => state.userReviews
+);
+
 export const selectIsUpdateMenuItemModalOpen = createSelector(
   selectMenuItemModalState,
   (state: ModalState) => state.updateMenuItem
@@ -26,4 +31,9 @@ export const selectDeleteMenuItemId = createSelector(
 export const selectMenuItemToUpdate = createSelector(
   selectMenuItemModalState,
   (state: ModalState) => state.menuItemToUpdate
+);
+
+export const selectReviewItemId = createSelector(
+  selectMenuItemModalState,
+  (state: ModalState) => state.itemId
 );
