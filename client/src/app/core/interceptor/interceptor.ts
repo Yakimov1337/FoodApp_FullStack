@@ -1,38 +1,60 @@
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, EMPTY, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
-import { AuthStateService } from '../../services/auth-state.service';
+import { AuthService } from '../../services/auth.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private authStateService: AuthStateService, private router: Router) {}
+  private isRefreshing = false;
+  constructor(private authService: AuthService, private router: Router,private toastr: ToastrService) {}
 
-  // This interceptor goal is to logout the user if there are no cookies, because ngrx user state won't notice cookie deletion
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    // Check if the request is for static assets and bypass the auth check
-    // this causes unexpected behavior for sign-up page
-    if (request.url.startsWith('assets/')) {
-      return next.handle(request);
+    // Add the access token to the headers
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      request = request.clone({
+        setHeaders: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
     }
 
-    // For Appwrite API requests, perform the authentication check
-      return this.authStateService.isAuthenticated().pipe(
-        switchMap(isAuthenticated => {
-          if (!isAuthenticated) {
-            console.log('User not authenticated, redirecting to sign-in page.');
-            this.router.navigate(['/auth/sign-in']).then(() => {
-              console.log('Redirected to sign-in page due to unauthenticated request attempt.');
-            });
-            return EMPTY;
-          }
-          return next.handle(request);
-        }),
-        catchError(error => {
-          console.error('Error in authentication process:', error);
+    return next.handle(request).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401 && !this.isRefreshing) {
+          this.isRefreshing = true;
+          return this.authService.refreshToken().pipe(
+            switchMap((newAccessToken: string) => {
+              localStorage.setItem('accessToken', newAccessToken);
+              this.isRefreshing = false; // Reset the flag
+              // Retry the failed request with the new token
+              request = request.clone({
+                setHeaders: {
+                  Authorization: `Bearer ${newAccessToken}`,
+                },
+              });
+              return next.handle(request);
+            }),
+            catchError((err) => {
+              this.isRefreshing = false; // Reset the flag
+              if (err.status === 403 || err.status === 401) { // Handle the custom status code
+                this.toastr.info("Session expired. Please log in again.");
+              }
+              localStorage.removeItem('accessToken');
+              sessionStorage.clear();
+              // If refresh token fails, redirect to sign-in page
+              this.router.navigate(['/auth/sign-in']);
+              return throwError(() => new Error('Session expired. Please log in again.'));
+            }),
+          );
+        } else {
+          this.isRefreshing = false; // Reset the flag
           return throwError(() => error);
-        })
-      );
+        }
+      }),
+    );
   }
 }
