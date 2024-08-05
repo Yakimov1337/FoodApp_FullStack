@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
   selector: 'app-pagination',
   templateUrl: './pagination.component.html',
   standalone: true,
-  imports: [CommonModule,RouterLink]
+  imports: [CommonModule, RouterLink]
 })
 export class PaginationComponent {
   @Input() currentPage: number = 1;
@@ -15,5 +15,35 @@ export class PaginationComponent {
 
   onPageChange(page: number) {
     this.pageChange.emit(page);
+  }
+
+  getPageNumbers(): number[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    const delta = 2;
+    const range: number[] = [];
+    const rangeWithDots: number[] = [];
+
+    for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+      range.push(i);
+    }
+
+    if (current - delta > 2) {
+      rangeWithDots.push(1);
+      rangeWithDots.push(-1); // -1 indicates a gap
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (current + delta < total - 1) {
+      rangeWithDots.push(-1); // -1 indicates a gap
+      rangeWithDots.push(total);
+    } else if (total !== 1) {
+      rangeWithDots.push(total);
+    }
+
+    return rangeWithDots;
   }
 }
