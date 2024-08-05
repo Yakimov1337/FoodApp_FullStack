@@ -3,6 +3,7 @@ package com.foodsquad.FoodSquad.controller;
 import com.foodsquad.FoodSquad.model.dto.OrderDTO;
 import com.foodsquad.FoodSquad.model.dto.UserRegistrationDTO;
 import com.foodsquad.FoodSquad.model.dto.UserResponseDTO;
+import com.foodsquad.FoodSquad.model.dto.UserUpdateDTO;
 import com.foodsquad.FoodSquad.service.AuthService;
 import com.foodsquad.FoodSquad.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,8 +64,8 @@ public class UserController {
             @PathVariable String id,
 
             @Parameter(description = "Updated user details", required = true)
-            @Valid @RequestBody UserResponseDTO userResponseDTO) {
-        return userService.updateUser(id, userResponseDTO);
+            @Valid @RequestBody UserUpdateDTO updateUserDTO) {
+        return userService.updateUser(id, updateUserDTO);
     }
 
     @Operation(summary = "Delete a user by ID", description = "Delete an existing user by their unique ID.")
