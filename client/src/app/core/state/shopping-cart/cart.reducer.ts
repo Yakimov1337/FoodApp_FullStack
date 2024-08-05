@@ -17,6 +17,6 @@ export const initialCartState: CartState = {
 export const cartReducer = createReducer(
   initialCartState,
   on(addItem, (state, { item }) => ({ ...state, items: [...state.items, item] })),
-  on(removeItem, (state, { itemId }) => ({ ...state, items: state.items.filter(item => item.$id !== itemId) })),
+  on(removeItem, (state, { itemId }) => ({ ...state, items: state.items.filter(item => item.id !== itemId) })),
   on(clearCart, state => ({ ...state, items: [] })),
 );
