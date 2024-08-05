@@ -35,6 +35,11 @@ export class Menu {
           label: 'Users',
           route: '/admin/users',
         },
+        {
+          icon: 'assets/icons/heroicons/outline/star.svg',
+          label: 'Reviews',
+          route: '/admin/reviews',
+        },
       ],
     },   {
       group: 'Pages',
