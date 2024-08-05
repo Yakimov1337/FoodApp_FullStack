@@ -3,6 +3,7 @@ package com.foodsquad.FoodSquad.controller;
 import com.foodsquad.FoodSquad.model.dto.UserLoginDTO;
 import com.foodsquad.FoodSquad.model.dto.UserRegistrationDTO;
 import com.foodsquad.FoodSquad.model.dto.UserResponseDTO;
+import com.foodsquad.FoodSquad.model.entity.User;
 import com.foodsquad.FoodSquad.service.AuthService;
 import com.foodsquad.FoodSquad.service.TokenService;
 import com.foodsquad.FoodSquad.util.JwtUtil;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
@@ -128,4 +130,25 @@ public class AuthController {
 
         return ResponseEntity.ok(responseMap);
     }
+
+    @Operation(summary = "Get current user", description = "Get the details of the currently authenticated user.")
+    @GetMapping("/current-user")
+    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String accessTokenHeader) {
+        String accessToken = accessTokenHeader.replace("Bearer ", "");
+        String email;
+        try {
+            email = jwtUtil.extractClaims(accessToken).getSubject();
+        } catch (ExpiredJwtException e) {
+            logger.error("Access token is expired: {}", accessToken);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Access token is expired"));
+        } catch (JwtException e) {
+            logger.error("Failed to extract claims from access token: {}", accessToken);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Failed to extract claims from access token"));
+        }
+
+        User user = authService.loadUserEntityByUsername(email);
+        UserResponseDTO userResponseDTO = new UserResponseDTO(user);
+        return ResponseEntity.ok(userResponseDTO);
+    }
+
 }
