@@ -1,5 +1,5 @@
 import { APP_INITIALIZER, enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
-import { environment } from './environments/environment';
+import { environment } from './environments/environment.local';
 import { AppComponent } from './app/app.component';
 import { AppRoutingModule } from './app/app-routing.module';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
@@ -14,18 +14,20 @@ import { provideToastr } from 'ngx-toastr';
 import { AuthStateService } from './app/services/auth-state.service';
 import { authReducer } from './app/core/state/auth/auth.reducer';
 import { AuthEffects } from './app/core/state/auth/auth.effects';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { AuthInterceptor } from './app/core/interceptor/interceptor';
 import { cartReducer } from './app/core/state/shopping-cart/cart.reducer';
 import { CartEffects } from './app/core/state/shopping-cart/cart.effects';
+import { ReviewModalReducer } from './app/core/state/modal/review/modal.reducer';
 
 if (environment.production) {
   enableProdMode();
-  //show this warning only on prod mode
+  //show this warning only in prod mode
   if (window) {
     selfXSSWarning();
   }
 }
+
 export function initializeApp(authStateService: AuthStateService) {
   return (): Promise<void> => {
     return authStateService.initializeAuthState();
@@ -35,6 +37,7 @@ export function initializeApp(authStateService: AuthStateService) {
 const initialReducers = {
   userModals: userModalReducer,
   orderModals: orderModalReducer,
+  reviewModals: ReviewModalReducer,
   menuItemModals: menuItemsModalReducer,
   auth: authReducer,
   cart: cartReducer,
@@ -42,18 +45,17 @@ const initialReducers = {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    importProvidersFrom(BrowserModule, AppRoutingModule,BrowserAnimationsModule),
+    importProvidersFrom(BrowserModule, AppRoutingModule, BrowserAnimationsModule, HttpClientModule),
     provideAnimations(),
     provideToastr(),
-    provideAnimations(),
     provideStore(initialReducers),
-    provideEffects([AuthEffects,CartEffects]),
+    provideEffects([AuthEffects, CartEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
     {
       provide: APP_INITIALIZER,
       useFactory: (authStateService: AuthStateService) => () => authStateService.initializeAuthState(),
       deps: [AuthStateService],
-      multi: true
+      multi: true,
     },
     {
       provide: HTTP_INTERCEPTORS,
@@ -70,7 +72,7 @@ function selfXSSWarning() {
       'font-weight:bold; font: 2.5em Arial; color: white; background-color: #e11d48; padding-left: 15px; padding-right: 15px; border-radius: 25px; padding-top: 5px; padding-bottom: 5px;',
     );
     console.log(
-      `\n%cThis is a browser feature intended for developers. Using this console may allow attackers to impersonate you and steal your information sing an attack called Self-XSS. Do not enter or paste code that you do not understand.`,
+      `\n%cThis is a browser feature intended for developers. Using this console may allow attackers to impersonate you and steal your information using an attack called Self-XSS. Do not enter or paste code that you do not understand.`,
       'font-weight:bold; font: 2em Arial; color: #e11d48;',
     );
   });
