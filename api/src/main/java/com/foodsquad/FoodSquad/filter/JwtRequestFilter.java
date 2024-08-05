@@ -1,6 +1,6 @@
 package com.foodsquad.FoodSquad.filter;
 
-import com.foodsquad.FoodSquad.service.CustomUserDetailsService;
+import com.foodsquad.FoodSquad.service.AuthService;
 import com.foodsquad.FoodSquad.util.JwtUtil;
 import com.foodsquad.FoodSquad.repository.TokenRepository;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -26,7 +26,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private AuthService authService; // Use AuthService instead of CustomUserDetailsService
 
     @Autowired
     private TokenRepository tokenRepository;
@@ -52,7 +52,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.customUserDetailsService.loadUserByUsername(username);
+            UserDetails userDetails = this.authService.loadUserByUsername(username);
 
             if (jwtUtil.validateToken(jwt, userDetails) && tokenRepository.existsByAccessToken(jwt)) {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
