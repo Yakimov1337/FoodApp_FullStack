@@ -19,10 +19,10 @@ public class UserResponseDTO {
     @Schema(description = "Name of the user", example = "John Doe")
     private String name;
 
-//    @NotBlank(message = "Email is required")
-//    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
     @Schema(description = "Email address of the user", example = "john.doe@example.com")
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+//    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String email;
 
     @NotBlank(message = "Role is required")
