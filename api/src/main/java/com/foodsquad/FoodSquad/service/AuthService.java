@@ -42,6 +42,11 @@ public class AuthService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), user.getAuthorities());
     }
 
+    public User loadUserEntityByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
     @Transactional
     public UserResponseDTO registerUser(UserRegistrationDTO userRegistrationDTO) {
         Optional<User> existingUser = userRepository.findByEmail(userRegistrationDTO.getEmail());
