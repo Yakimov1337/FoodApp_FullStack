@@ -18,24 +18,25 @@ export class AuthEffects {
     private toastr: ToastrService,
   ) {}
 
-  // AuthEffects
   login$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.login),
-      mergeMap(() => this.authService.getCurrentUserSession()),
-      map((dbUser) => AuthActions.loginSuccess({ user: dbUser })),
-      catchError((error) => of(AuthActions.loginFailure({ error: error.message }))),
+      mergeMap((action) =>
+        this.authService.signInAccount(action.email, action.password).pipe(
+          map((user) => AuthActions.loginSuccess({ user })),
+          catchError((error) => of(AuthActions.loginFailure({ error: error.message }))),
+        ),
+      ),
     ),
   );
+
   loginSuccess$ = createEffect(
     () =>
       this.actions$.pipe(
         ofType(AuthActions.loginSuccess),
         tap(({ user }) => {
-          // Handle navigation or other actions on success
           this.toastr.success(`Successfully logged in!`);
           if (user.role === 'Admin' || user.role === 'Moderator') {
-            console.log(user.role);
             this.router.navigate(['/admin/dashboard']);
           } else {
             this.router.navigate(['/']);
@@ -44,36 +45,39 @@ export class AuthEffects {
       ),
     { dispatch: false },
   );
+
+  loginFailure$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AuthActions.loginFailure),
+        tap(({ error }) => {
+          this.toastr.error('Login failed: ' + error);
+        }),
+      ),
+    { dispatch: false },
+  );
+
   restoreSessionSuccess$ = createEffect(() => this.actions$.pipe(ofType(AuthActions.restoreSessionSuccess)), {
     dispatch: false,
   });
-  logout$ = createEffect(() =>
-  this.actions$.pipe(
-      ofType(AuthActions.logout),
-      tap(() => console.log('Logout action received')),
-      switchMap(() => {
-          console.log('Calling signOutAccount from AuthService');
-          return this.authService.signOutAccount().pipe(
-              tap(() => {
-                  console.log('Successfully called signOutAccount');
-                  // Client-side cleanup
-                  localStorage.removeItem('cookieFallback');
-                  sessionStorage.clear();
-                  // Navigate to sign-in page
-                  this.router.navigate(['/auth/sign-in']);
-              }),
-              map(() => {
-                  console.log('Dispatching logoutSuccess');
-                  return AuthActions.logoutSuccess();
-              }),
-              catchError((error) => {
-                  console.error('Error during logout:', error);
-                  return of(AuthActions.logoutFailure({ error: error.toString() }));
-              })
-          );
-      }),
-      tap(() => console.log('Logout effect complete')),
-  ),
-  { dispatch: false },
-);
+
+  logout$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AuthActions.logout),
+        switchMap(() =>
+          this.authService.logout().pipe(
+            tap(() => {
+              this.toastr.success('Successfully logged out!');
+              this.router.navigate(['/auth/sign-in']);
+            }),
+            catchError((error) => {
+              this.toastr.error('Logout failed: ' + error.message);
+              return of(AuthActions.logoutFailure({ error: error.message }));
+            })
+          )
+        )
+      ),
+    { dispatch: false }
+  );
 }
