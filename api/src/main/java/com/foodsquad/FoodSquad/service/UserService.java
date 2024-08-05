@@ -8,6 +8,7 @@ import com.foodsquad.FoodSquad.model.entity.UserRole;
 import com.foodsquad.FoodSquad.repository.OrderRepository;
 import com.foodsquad.FoodSquad.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -72,7 +73,7 @@ public class UserService {
         return ResponseEntity.ok(userDTO);
     }
 
-
+    @Transactional
     public ResponseEntity<UserResponseDTO> updateUser(String id, UserResponseDTO userResponseDTO) {
         checkOwnership(id);
 
@@ -97,9 +98,18 @@ public class UserService {
         return ResponseEntity.ok(updatedUserDTO);
     }
 
+    @Transactional
     public ResponseEntity<Map<String, String>> deleteUser(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found for ID: " + id));
+        if (user.getRole().equals(UserRole.ADMIN)) {
+            throw new IllegalArgumentException("Admin users cannot be deleted.");
+        }
+
+        // Delete menu item references in order_menu_item (w/o this foreign key table error appears)
+        user.getMenuItems().forEach(menuItem -> {
+            orderRepository.removeMenuItemReferences(menuItem.getId());
+        });
 
         userRepository.delete(user);
         return ResponseEntity.ok(Map.of("message","User successfully deleted."));

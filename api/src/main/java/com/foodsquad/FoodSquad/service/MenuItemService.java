@@ -10,6 +10,7 @@ import com.foodsquad.FoodSquad.repository.OrderRepository;
 import com.foodsquad.FoodSquad.repository.ReviewRepository;
 import com.foodsquad.FoodSquad.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -143,6 +144,7 @@ public class MenuItemService {
         return menuItems;
     }
 
+    @Transactional
     public ResponseEntity<MenuItemDTO> updateMenuItem(Long id, MenuItemDTO menuItemDTO) {
         MenuItem existingMenuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MenuItem not found for ID: " + id));
@@ -165,13 +167,19 @@ public class MenuItemService {
         return ResponseEntity.ok(updatedMenuItemDTO);
     }
 
+    @Transactional
     public ResponseEntity<Map<String, String>> deleteMenuItem(Long id) {
         MenuItem menuItem = menuItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MenuItem not found for ID: " + id));
         checkOwnership(menuItem);
+
+        // Remove references in order_menu_item table (w/o this foreign key error appears)
+        orderRepository.removeMenuItemReferences(menuItem.getId());
+
         menuItemRepository.delete(menuItem);
         return ResponseEntity.ok(Map.of("message", "Menu Item successfully deleted"));
     }
+
 
     //  method to fetch multiple menu items by their IDs
     public ResponseEntity<List<MenuItemDTO>> getMenuItemsByIds(List<Long> ids) {
@@ -197,7 +205,9 @@ public class MenuItemService {
         return ResponseEntity.ok(menuItemDTOs);
     }
 
+
     // Method to delete multiple menu items by their IDs
+    @Transactional
     public ResponseEntity<Map<String, String>> deleteMenuItemsByIds(List<Long> ids) {
         List<MenuItem> menuItems = menuItemRepository.findAllById(ids);
         if (menuItems.isEmpty()) {
@@ -205,6 +215,7 @@ public class MenuItemService {
         }
         menuItems.forEach(menuItem -> {
             checkOwnership(menuItem);
+            orderRepository.removeMenuItemReferences(menuItem.getId()); // Remove references in order_menu_item table
             menuItemRepository.delete(menuItem);
         });
         return ResponseEntity.ok(Map.of("message", "Menu Items successfully deleted"));
