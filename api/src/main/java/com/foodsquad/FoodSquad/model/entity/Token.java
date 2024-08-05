@@ -16,8 +16,11 @@ public class Token {
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
-    @Column(nullable = false)
-    private LocalDateTime expiryDate;
+    @Column(name = "access_token_expiry_date", nullable = false)
+    private LocalDateTime accessTokenExpiryDate;
+
+    @Column(name = "refresh_token_expiry_date", nullable = false)
+    private LocalDateTime refreshTokenExpiryDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -47,12 +50,20 @@ public class Token {
         this.refreshToken = refreshToken;
     }
 
-    public LocalDateTime getExpiryDate() {
-        return expiryDate;
+    public LocalDateTime getAccessTokenExpiryDate() {
+        return accessTokenExpiryDate;
     }
 
-    public void setExpiryDate(LocalDateTime expiryDate) {
-        this.expiryDate = expiryDate;
+    public void setAccessTokenExpiryDate(LocalDateTime accessTokenExpiryDate) {
+        this.accessTokenExpiryDate = accessTokenExpiryDate;
+    }
+
+    public LocalDateTime getRefreshTokenExpiryDate() {
+        return refreshTokenExpiryDate;
+    }
+
+    public void setRefreshTokenExpiryDate(LocalDateTime refreshTokenExpiryDate) {
+        this.refreshTokenExpiryDate = refreshTokenExpiryDate;
     }
 
     public User getUser() {
