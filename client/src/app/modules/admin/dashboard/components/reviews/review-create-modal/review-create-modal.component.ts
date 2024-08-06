@@ -1,4 +1,4 @@
-import { Observable, of } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { CommonModule, formatDate } from '@angular/common';
@@ -44,7 +44,9 @@ export class ReviewCreateModalComponent {
   }
 
   ngOnInit(): void {
-    this.menuItems$ = this.menuItemsService.getAllMenuItems(1, 100);
+    this.menuItems$ = this.menuItemsService.getAllMenuItems(1, 100).pipe(
+      map(response => response.items)
+    );
   }
 
   createReview(): void {

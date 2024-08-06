@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { Review, MenuItem } from '../../../../../../core/models';
 import { selectReviewToUpdate } from '../../../../../../core/state/modal/review/modal.selectors';
 import { closeUpdateReviewModal } from '../../../../../../core/state/modal/review/modal.actions';
@@ -37,7 +37,9 @@ export class ReviewUpdateModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.menuItems$ = this.menuItemsService.getAllMenuItems(1, 100);
+      this.menuItems$ = this.menuItemsService.getAllMenuItems(1, 100).pipe(
+        map(response => response.items)
+      );
     this.store.select(selectReviewToUpdate).subscribe((review) => {
       if (review) {
         this.currentReviewId = review.id;
