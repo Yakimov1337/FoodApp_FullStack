@@ -5,42 +5,33 @@ import { ChartOptions } from '../../../../../../shared/models/chart-options';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { OrdersService } from '../../../../../../services/orders.service';
 
 @Component({
   selector: '[menuItem-chart-card]',
   templateUrl: './menuItem-chart-card.component.html',
   standalone: true,
-  imports: [AngularSvgIconModule, NgApexchartsModule, RouterLink],
+  imports: [AngularSvgIconModule, NgApexchartsModule, RouterLink, CommonModule],
 })
 export class MenuItemChartCardComponent implements OnInit, OnDestroy {
   public chartOptions: Partial<ChartOptions>;
+  private subscriptions: Subscription = new Subscription();
+  public totalProfit: number = 0;
+  public profitRate: number = 0;
+  public profitData: { time: string, profit: number }[] = [];
 
-  constructor(private themeService: ThemeService) {
+  constructor(
+    private themeService: ThemeService,
+    private ordersService: OrdersService,
+  ) {
     let baseColor = '#FFFFFF';
-    const data = [2100, 3200, 3200, 2400, 2400, 1800, 1800, 2400, 2400, 3200, 3200, 3000, 3000, 3250, 3250];
-    const categories = [
-      '10AM',
-      '10.30AM',
-      '11AM',
-      '11.15AM',
-      '11.30AM',
-      '12PM',
-      '1PM',
-      '2PM',
-      '3PM',
-      '4PM',
-      '5PM',
-      '6PM',
-      '7PM',
-      '8PM',
-      '9PM',
-    ];
 
     this.chartOptions = {
       series: [
         {
           name: 'Profit rate',
-          data: data,
+          data: [100,200,300],
         },
       ],
       chart: {
@@ -73,9 +64,12 @@ export class MenuItemChartCardComponent implements OnInit, OnDestroy {
         colors: [baseColor], // line color
       },
       xaxis: {
-        categories: categories,
+        categories: [],
         labels: {
-          show: false,
+          show: true,
+          style: {
+            colors: '#9aa0ac', // x-axis label color
+          },
         },
         crosshairs: {
           position: 'front',
@@ -87,6 +81,17 @@ export class MenuItemChartCardComponent implements OnInit, OnDestroy {
         },
         tooltip: {
           enabled: true,
+        },
+      },
+      yaxis: {
+        labels: {
+          show: true,
+          style: {
+            colors: '#9aa0ac', // y-axis label color
+          },
+          formatter: function (val) {
+            return val.toFixed(0); // Format y-axis values to remove decimals
+          },
         },
       },
       tooltip: {
@@ -113,6 +118,65 @@ export class MenuItemChartCardComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngOnInit(): void {
+    this.fetchData();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  private fetchData(): void {
+    this.subscriptions.add(
+      this.ordersService.getAllOrders().subscribe((orders) => {
+        this.totalProfit = orders.reduce((sum, order) => sum + order.totalCost, 0);
+        this.profitData = orders.map(order => ({
+          time: new Date(order.createdOn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          profit: order.totalCost
+        }));
+
+        const categories = this.profitData.map((item) => item.time);
+        const data = this.profitData.map((item) => item.profit);
+
+        this.updateChartOptions(categories, data);
+      })
+    );
+  }
+
+  private updateChartOptions(categories: string[], data: number[]): void {
+    this.chartOptions = {
+      ...this.chartOptions,
+      series: [
+        {
+          name: 'Profit rate',
+          data: data,
+        },
+      ],
+      xaxis: {
+        ...this.chartOptions.xaxis,
+        categories: categories,
+        labels: {
+          show: true,
+          style: {
+            colors: '#9aa0ac', // x-axis label color
+          },
+        },
+      },
+      yaxis: {
+        ...this.chartOptions.yaxis,
+        labels: {
+          show: true,
+          style: {
+            colors: '#9aa0ac', // y-axis label color
+          },
+          formatter: function (val) {
+            return val.toFixed(0); // Format y-axis values to remove decimals
+          },
+        },
+      },
+    };
+  }
+
   private HSLToHex(color: string): string {
     const colorArray = color.split('%').join('').split(' ');
     const colorHSL = colorArray.map(Number);
@@ -137,8 +201,4 @@ export class MenuItemChartCardComponent implements OnInit, OnDestroy {
     };
     return `#${f(0)}${f(8)}${f(4)}`;
   }
-
-  ngOnInit(): void {}
-
-  ngOnDestroy(): void {}
 }
