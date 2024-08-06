@@ -1,6 +1,7 @@
 package com.foodsquad.FoodSquad.controller;
 
 import com.foodsquad.FoodSquad.model.dto.MenuItemDTO;
+import com.foodsquad.FoodSquad.model.dto.PaginatedResponseDTO;
 import com.foodsquad.FoodSquad.service.MenuItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,7 +40,7 @@ public class MenuItemController {
 
     @Operation(summary = "Get all menu items", description = "Retrieve a list of menu items with optional filters and sorting.")
     @GetMapping
-    public List<MenuItemDTO> getAllMenuItems(
+    public ResponseEntity<PaginatedResponseDTO<MenuItemDTO>> getAllMenuItems(
             @Parameter(description = "Page number, starting from 0", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -61,7 +62,9 @@ public class MenuItemController {
             @Parameter(description = "Sort direction for price: 'asc' for ascending, 'desc' for descending", required = false)
             @RequestParam(required = false) String priceSortDirection) {
 
-        return menuItemService.getAllMenuItems(page, limit, sortBy, desc, categoryFilter, isDefault, priceSortDirection);
+//        return menuItemService.getAllMenuItems(page, limit, sortBy, desc, categoryFilter, isDefault, priceSortDirection);
+        PaginatedResponseDTO<MenuItemDTO> response = menuItemService.getAllMenuItems(page, limit, sortBy, desc, categoryFilter, isDefault, priceSortDirection);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Update a menu item by ID", description = "Update the details of an existing menu item by its unique ID.")

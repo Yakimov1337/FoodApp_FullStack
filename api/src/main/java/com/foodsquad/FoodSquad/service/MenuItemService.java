@@ -1,6 +1,7 @@
 package com.foodsquad.FoodSquad.service;
 
 import com.foodsquad.FoodSquad.model.dto.MenuItemDTO;
+import com.foodsquad.FoodSquad.model.dto.PaginatedResponseDTO;
 import com.foodsquad.FoodSquad.model.entity.MenuItem;
 import com.foodsquad.FoodSquad.model.entity.MenuItemCategory;
 import com.foodsquad.FoodSquad.model.entity.User;
@@ -89,7 +90,7 @@ public class MenuItemService {
         return ResponseEntity.ok(menuItemDTO);
     }
 
-    public List<MenuItemDTO> getAllMenuItems(int page, int limit, String sortBy, boolean desc, String categoryFilter, String isDefault, String priceSortDirection) {
+    public PaginatedResponseDTO<MenuItemDTO> getAllMenuItems(int page, int limit, String sortBy, boolean desc, String categoryFilter, String isDefault, String priceSortDirection) {
         Pageable pageable = PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "createdOn"));
         Page<MenuItem> menuItemPage;
 
@@ -141,7 +142,8 @@ public class MenuItemService {
                     : item1.getSalesCount().compareTo(item2.getSalesCount()));
         }
 
-        return menuItems;
+        // PaginatedResponseDTO with the list of items and the total count
+        return new PaginatedResponseDTO<>(menuItems, menuItemPage.getTotalElements());
     }
 
     @Transactional
