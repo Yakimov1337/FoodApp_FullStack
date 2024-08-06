@@ -62,7 +62,7 @@
           <ng-container *ngIf="signUpForm.get('password')?.errors?.['required']"> Password is required </ng-container>
           <ng-container
             *ngIf="!signUpForm.get('password')?.errors?.['required'] && signUpForm.get('password')?.errors?.['minlength']">
-            Password must be at least 8 characters long
+            Password must be at least 6 characters long
           </ng-container>
           <ng-container *ngIf="!signUpForm.get('password')?.errors"> Password </ng-container>
         </ng-container>
@@ -88,7 +88,7 @@
         [ngClass]="filled ? 'bg-primary' : 'bg-muted'"></div>
     </div>
     <span class="text-xs text-muted-foreground">
-      Use 8 or more characters with a mix of letters, numbers & symbols.
+      Use 6 or more characters with a mix of letters, numbers & symbols.
     </span>
     <div class="relative">
       <input

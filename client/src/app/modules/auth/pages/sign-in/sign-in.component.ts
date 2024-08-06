@@ -35,7 +35,7 @@ export class SignInComponent implements OnInit {
   ngOnInit(): void {
     this.form = this.formBuilder.group({
       email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
@@ -67,14 +67,11 @@ export class SignInComponent implements OnInit {
   // Common login method
   private login(email: string, password: string, type: 'user' | 'admin' | 'moderator') {
     this.authService.signInAccount(email, password).subscribe({
-      next: () => {
-        // User is successfully authenticated, dispatch the login action
-        this.store.dispatch(AuthActions.login());
-        // (this as any)[`isLoading${type.charAt(0).toUpperCase() + type.slice(1)}`] = false; // makes spinner stops too early
+      next: (user) => {
+        this.store.dispatch(AuthActions.loginSuccess({ user }));
       },
       error: (error) => {
-        console.error('Error signing in:', error);
-        this.toastr.error('Login failed.', error);
+        this.toastr.error(error);
         (this as any)[`isLoading${type.charAt(0).toUpperCase() + type.slice(1)}`] = false; // Converts to camelCase isLoading admin or user or mod
       },
     });
@@ -88,8 +85,8 @@ export class SignInComponent implements OnInit {
     this.passwordTextType = !this.passwordTextType;
   }
 
-  googleAuth(event: Event){
-    this.toastr.info('Coming soon!')
+  googleAuth(event: Event) {
+    this.toastr.info('Coming soon!');
     event.preventDefault();
   }
 }

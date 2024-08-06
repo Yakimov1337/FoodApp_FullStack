@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControlOptions } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControlOptions, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { MustMatch } from './must-match.validator';
@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
 import { Store } from '@ngrx/store';
 import * as AuthActions from 'src/app/core/state/auth/auth.actions'
+
 @Component({
   selector: 'app-sign-up',
   templateUrl: './sign-up.component.html',
@@ -22,10 +23,9 @@ export class SignUpComponent implements OnInit {
   signUpForm!: FormGroup;
   isLoading = false;
 
-  //Progressive password bar
   get passwordStrength(): boolean[] {
     const length = this.signUpForm.get('password')?.value.length || 0;
-    return [1, 2, 3, 4].map((i) => length >= i * 2);
+    return [1, 2, 3, 4].map((i) => length >= i * 1.5);
   }
 
   constructor(
@@ -44,7 +44,7 @@ export class SignUpComponent implements OnInit {
     this.signUpForm = this.fb.group(
       {
         email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
-        password: ['', [Validators.required, Validators.minLength(8)]],
+        password: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', Validators.required],
       },
       formOptions,
@@ -59,22 +59,15 @@ export class SignUpComponent implements OnInit {
     this.signUpForm.markAllAsTouched();
     this.isLoading = true;
     if (this.signUpForm.valid) {
-      const { email, password } = this.signUpForm.value;
-      this.authService.createUserAccount({ email, password }).subscribe({
+      const { email, password, confirmPassword } = this.signUpForm.value;
+      this.authService.createUserAccount({ email, password, confirmPassword }).subscribe({
         next: (userCreatedResponse) => {
-          this.authService.signInAccount(email, password).subscribe({
-            next: (userSignInResponse) => {
-              this.store.dispatch(AuthActions.login());
-              this.isLoading = false;
-            },
-            error: (error) => {
-              this.toastr.error(`Sign In Error: ${error}`);
-              this.isLoading = false;
-            },
-          });
+          this.toastr.success('Registration successful. Please log in.');
+          this.router.navigate(['/auth/sign-in']);
+          this.isLoading = false;
         },
         error: (error) => {
-          this.toastr.error(`SignUp Error: ${error}`);
+          this.toastr.error(error);
           this.isLoading = false;
         },
       });
@@ -89,7 +82,7 @@ export class SignUpComponent implements OnInit {
   }
 
   googleAuth(event: Event){
-    this.toastr.info('Coming soon!')
+    this.toastr.info('Coming soon!');
     event.preventDefault();
   }
 }
