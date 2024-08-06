@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpErrorResponse, HttpEvent, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 
@@ -33,9 +33,23 @@ export class BaseService {
     );
   }
 
-  protected delete<T>(url: string): Observable<T> {
-    return this.http.delete<T>(url).pipe(
+  protected delete<T>(url: string, body?: any): Observable<T> {
+    return this.http.request<T>('DELETE', url, { body }).pipe(
       catchError(this.handleError.bind(this))
+    );
+  }
+
+  protected deleteWithParams<T>(url: string, params: any): Observable<T> {
+    return this.http.request<T>('DELETE', url, {
+      params,
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          this.router.navigate(['/auth/sign-in']);
+        }
+        return throwError(() => new Error(error.message || 'An unexpected error occurred'));
+      })
     );
   }
 

@@ -1,123 +1,126 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, from, Observable } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { databases, ID } from '../core/lib/appwrite';
-import { MenuItem } from '../core/models';
-import { environment } from 'src/environments/environment.local';
-import { Query } from 'appwrite';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { MenuItem, PaginatedResponseDTO } from '../core/models';
+import { BaseService } from './base.service';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../environments/environment.local';
 
 @Injectable({
   providedIn: 'root',
 })
-export class MenuItemsService {
-  private readonly databaseId = environment.appwriteDatabaseId;
-  private readonly MenuItemsCollectionId = environment.menuItemsCollectionId;
+export class MenuItemsService extends BaseService {
+  private readonly baseUrl = `${environment.apiUrl}/menu-items`;
   private menuItemCreatedSource = new BehaviorSubject<MenuItem | null>(null);
   private menuItemUpdatedSource = new BehaviorSubject<MenuItem | null>(null);
-  private menuItemDeletedSource = new BehaviorSubject<string | undefined | null>(null);
+  private menuItemDeletedSource = new BehaviorSubject<number | undefined | null>(null);
+  private reviewSubmittedSource = new BehaviorSubject<void>(undefined);
 
   // Observable stream to be consumed by components
   menuItemCreated$ = this.menuItemCreatedSource.asObservable();
   menuItemDeleted$ = this.menuItemDeletedSource.asObservable();
   menuItemUpdated$ = this.menuItemUpdatedSource.asObservable();
+  reviewSubmitted$ = this.reviewSubmittedSource.asObservable();
 
-  constructor() {}
-  // Emit event when a order is created
+  constructor(http: HttpClient, router: Router, toastr: ToastrService) {
+    super(http, router, toastr);
+  }
+
+  // Emit event when a menu item is created
   menuItemCreated(menuItem: MenuItem): void {
     this.menuItemCreatedSource.next(menuItem);
   }
 
-  // Emit event when a order is updated
+  // Emit event when a menu item is updated
   menuItemUpdated(menuItem: MenuItem): void {
-    this.menuItemCreatedSource.next(menuItem);
+    this.menuItemUpdatedSource.next(menuItem);
   }
 
-  // Emit event when a order is deleted
-  menuItemDeleted(menuItemId: string | undefined | null): void {
+  // Emit event when a menu item is deleted
+  menuItemDeleted(menuItemId: number | undefined | null): void {
     this.menuItemDeletedSource.next(menuItemId);
   }
 
-  // Get all MenuItems
-  getAllMenuItems(page: number = 1, limit: number = 10): Observable<MenuItem[]> {
-    const offset = (page - 1) * limit;
-    return from(
-      databases.listDocuments(this.databaseId, this.MenuItemsCollectionId, [
-        Query.limit(limit),
-        Query.offset(offset),
-        Query.orderDesc('$createdAt'),
-      ]),
-    ).pipe(
+  // Emit event when review is submitted
+  notifyReviewSubmitted() {
+    this.reviewSubmittedSource.next();
+  }
+
+  getAllMenuItems(
+    page: number = 1,
+    limit: number = 10,
+    categoryFilter: string = '',
+    isDefault: string = 'all',
+    priceSortDirection: string = '',
+    sortBy: string = '',
+    desc: boolean = true,
+  ): Observable<PaginatedResponseDTO<MenuItem>> {
+    let params = new HttpParams()
+      .set('page', (page - 1).toString())
+      .set('limit', limit.toString())
+      .set('sortBy', sortBy)
+      .set('desc', desc.toString());
+
+    if (categoryFilter) {
+      params = params.set('categoryFilter', categoryFilter);
+    }
+    if (isDefault !== 'all') {
+      params = params.set('isDefault', isDefault === 'yes' ? 'true' : 'false');
+    }
+    if (priceSortDirection) {
+      params = params.set('priceSortDirection', priceSortDirection);
+    }
+
+    return this.get<PaginatedResponseDTO<MenuItem>>(`${this.baseUrl}`, params);
+  }
+
+  createMenuItem(menuItemData: MenuItem): Observable<MenuItem> {
+    return this.post<MenuItem>(this.baseUrl, menuItemData).pipe(tap((result) => this.menuItemCreated(result)));
+  }
+
+  getMenuItemById(menuItemId: number): Observable<MenuItem> {
+    return this.get<MenuItem>(`${this.baseUrl}/${menuItemId}`).pipe(map((result) => result));
+  }
+
+  getMenuItemsByIds(ids: number[]): Observable<MenuItem[]> {
+    const params = new HttpParams().set('ids', ids.join(','));
+    return this.get<MenuItem[]>(`${this.baseUrl}/batch`, params).pipe(
       map((result) => {
         if (!result) throw new Error('No result');
-        return result.documents as unknown as MenuItem[];
-      }),
-      catchError((error) => {
-        console.error('Error fetching MenuItems:', error);
-        throw error;
+        return result;
       }),
     );
   }
 
-  // Create an MenuItem
-  createMenuItem(menuItemData: MenuItem): Observable<MenuItem> {
-    return from(databases.createDocument(this.databaseId, this.MenuItemsCollectionId, ID.unique(), menuItemData)).pipe(
-      map((result) => result as unknown as MenuItem),
-      catchError((error) => {
-        console.error('Error creating MenuItem:', error);
-        throw error;
+  updateMenuItem(menuItemId: number, menuItemData: Partial<MenuItem>): Observable<MenuItem> {
+    return this.put<MenuItem>(`${this.baseUrl}/${menuItemId}`, menuItemData).pipe(
+      tap((result) => this.menuItemUpdated(result)),
+    );
+  }
+
+  deleteMenuItem(menuItemId: number): Observable<void> {
+    return this.delete<void>(`${this.baseUrl}/${menuItemId}`).pipe(tap(() => this.menuItemDeleted(menuItemId)));
+  }
+
+  // Get top MenuItems by order count
+  getTopMenuItemsByOrderCount(size: number = 5): Observable<MenuItem[]> {
+    return this.getAllMenuItems(1, 1000).pipe(
+      map((response: PaginatedResponseDTO<MenuItem>) => {
+        return response.items.sort((a, b) => b.salesCount - a.salesCount).slice(0, size);
       }),
     );
   }
 
-  // Get a single MenuItem by ID
-  getMenuItemById(menuItemId: string): Observable<MenuItem> {
-    return from(databases.getDocument(this.databaseId, this.MenuItemsCollectionId, menuItemId)).pipe(
-      map((result) => result as unknown as MenuItem),
-      catchError((error) => {
-        console.error('Error fetching MenuItem:', error);
-        throw error;
-      }),
-    );
-  }
+  deleteMenuItemsByIds(ids: number[]): Observable<void> {
+    let params = new HttpParams().set('ids', ids.join(','));
 
-  // Update an MenuItem
-  updateMenuItem(menuItemId: string, menuItemData: Partial<MenuItem>): Observable<MenuItem> {
-    return from(databases.updateDocument(this.databaseId, this.MenuItemsCollectionId, menuItemId, menuItemData)).pipe(
-      map((result) => result as unknown as MenuItem),
-      catchError((error) => {
-        console.error('Error updating MenuItem:', error);
-        throw error;
-      }),
-    );
-  }
-
-  // Delete an MenuItem
-  deleteMenuItem(menuItemId: string): Observable<void> {
-    return from(databases.deleteDocument(this.databaseId, this.MenuItemsCollectionId, menuItemId)).pipe(
-      map(() => undefined), // Converting to void
-      catchError((error) => {
-        console.error('Error deleting MenuItem:', error);
-        throw error;
-      }),
-    );
-  }
-
-  getTopMenuItemsByOrderCount(): Observable<MenuItem[]> {
-    return from(
-      databases.listDocuments(this.databaseId, this.MenuItemsCollectionId,[ Query.limit(100)])
-    ).pipe(
-      map((result) => {
-        if (!result || !result.documents) throw new Error('No result');
-        const documents: MenuItem[] = result.documents as unknown as MenuItem[];
-        // Sort the documents by the length of their 'orders' array in descending order
-        const sortedDocuments = documents.sort((a, b) => (b.orders?.length || 0) - (a.orders?.length || 0));
-        // Return the top 5 documents
-        return sortedDocuments.slice(0, 5);
-      }),
-      catchError((error) => {
-        console.error('Error fetching MenuItems:', error);
-        throw error;
-      }),
+    return this.deleteWithParams<void>(`${this.baseUrl}/batch`, params).pipe(
+      catchError((error: any) => {
+        // Handle specific errors or rethrow
+        return throwError(() => new Error(error.message || 'An unexpected error occurred'));
+      })
     );
   }
 }
