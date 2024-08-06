@@ -89,7 +89,7 @@ Welcome to **Food Squad**, an advanced web application designed to enhance your 
 
 1. **Clone the Repository**
     ```bash
-    git clone https://github.com/your-repo/fullstack-food-squad.git
+    git clone https://github.com/Yakimov1337/FoodApp_FullStack/tree/main/client
     cd fullstack-food-squad/client
     ```
 

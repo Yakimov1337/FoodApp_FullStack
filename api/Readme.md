@@ -8,7 +8,7 @@ entities, and their functionalities.
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/your-repo/food-squad-backend.git
+   git clone https://github.com/Yakimov1337/FoodApp_FullStack/tree/main/api
    cd food-squad-backend
 
 2. **Build and Run the Backend Server**
