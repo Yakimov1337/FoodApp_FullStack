@@ -9,6 +9,7 @@ import { AboutUsComponent } from '../pages/about-us/about-us.component';
 import { OrdersComponent } from '../pages/orders/orders.component';
 import { SuccessComponent } from '../pages/stripe/success/success.component';
 import { CancelledComponent } from '../pages/stripe/cancelled/cancelled.component';
+import { ReviewsComponent } from '../pages/reviews/reviews.component';
 
 const routes: Routes = [
   {
@@ -17,6 +18,7 @@ const routes: Routes = [
     children: [
       { path: '', component: HomeComponent, pathMatch: 'full' },
       { path: 'menu', component: MenuComponent },
+      { path: 'reviews', component: ReviewsComponent },
       { path: 'profile', component: UserProfileComponent },
       { path: 'orders', component: OrdersComponent },
       { path: 'about-us', component: AboutUsComponent },
