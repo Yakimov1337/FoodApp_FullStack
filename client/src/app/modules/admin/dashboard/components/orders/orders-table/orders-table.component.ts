@@ -59,7 +59,6 @@ export class OrdersTableComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.toastr.error('Error fetching Orders', error);
         this.isLoading = false;
       },
     });
@@ -90,15 +89,25 @@ export class OrdersTableComponent implements OnInit {
   private initializeSubscriptions(): void {
     const orderCreatedSub = this.ordersService.orderCreated$.subscribe((order) => {
       if (order) {
-        this.loadOrders(this.currentPage); // Refetch orders after a new order is created
+        this.loadOrders(this.currentPage);
+        // this.orders.unshift(order);
       }
     });
     const orderDeletedSub = this.ordersService.orderDeleted$.subscribe((deletedOrderId) => {
       if (deletedOrderId) {
-        this.orders = this.orders.filter((order) => order.$id !== deletedOrderId);
+        this.orders = this.orders.filter((order) => order.id !== deletedOrderId);
+      }
+    });
+    const orderUpdatedSub = this.ordersService.orderUpdated$.subscribe((updatedOrder) => {
+      if (updatedOrder) {
+        const index = this.orders.findIndex((order) => order.id === updatedOrder.id);
+        if (index !== -1) {
+          this.orders[index] = updatedOrder; // Update the order in the list
+        }
       }
     });
     this.subscriptions.add(orderCreatedSub);
     this.subscriptions.add(orderDeletedSub);
+    this.subscriptions.add(orderUpdatedSub);
   }
 }
