@@ -12,3 +12,8 @@ export interface MenuItem {
   reviewCount: number;
   averageRating: number;
 }
+
+export interface PaginatedResponseDTO<T> {
+  items: T[];
+  totalCount: number;
+}
