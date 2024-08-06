@@ -8,6 +8,7 @@ const targetPath = path.join(__dirname, './src/environments/environment.prod.ts'
 // Environment file content, ensuring the variable names match your Vercel setup
 const envConfigFile = `export const environment = {
   production: true,
+  apiUrl: '${process.env.apiUrl}'
   stripePublishKey: '${process.env.stripePublishKey}',
     adminCredentials: {
     email: '${process.env.adminCredentials.email}',
