@@ -29,7 +29,16 @@ export interface AuthState {
   user: User | null;
   error: string | null;
   isLoading: boolean;
+  isUpdatingInfo: boolean;
 }
+
+export interface UserUpdate {
+  name: string;
+  imageUrl: URL;
+  phoneNumber: string;
+  role: string;
+}
+
 
 export enum Role {
   Normal = 'Normal',
