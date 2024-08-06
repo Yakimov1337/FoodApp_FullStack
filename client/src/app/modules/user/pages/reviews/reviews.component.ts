@@ -5,7 +5,7 @@ import { ReviewsTableComponent } from './components/reviews-table/reviews-table.
   selector: 'app-Reviews',
   standalone: true,
   imports: [  ReviewsTableComponent,],
-  templateUrl: './Reviews.component.html',
+  templateUrl: './reviews.component.html',
   animations: [
     trigger('slideInDown', [
       transition(':enter', [
