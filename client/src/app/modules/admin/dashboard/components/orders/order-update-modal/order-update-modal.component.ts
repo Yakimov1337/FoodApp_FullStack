@@ -1,14 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, FormControl } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Observable, of } from 'rxjs';
-import { User } from '../../../../../../core/models';
+import { map, Observable, of } from 'rxjs';
+import { MenuItem, User } from '../../../../../../core/models';
 import { selectOrderToUpdate } from '../../../../../../core/state/modal/order/modal.selectors';
 import { closeUpdateOrderModal } from '../../../../../../core/state/modal/order/modal.actions';
 import { OrdersService } from '../../../../../../services/orders.service';
 import { UserService } from '../../../../../../services/user.service';
 import { CommonModule, formatDate } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
+import { MenuItemsService } from '../../../../../../services/menuItems.service';
 
 @Component({
   selector: '[order-update-modal]',
@@ -19,9 +20,10 @@ import { ToastrService } from 'ngx-toastr';
 export class OrderUpdateModalComponent implements OnInit {
   orderForm: FormGroup;
   users$: Observable<User[]>;
+  menuItems$: Observable<MenuItem[]> = of([]);
   minDate: string;
   isMenuItemsDropdownOpen: boolean = false;
-  orderedMenuItemTitles$: Observable<string[]> = of([]);
+  orderedMenuItemTitles$: Observable<number[]> = of([]);
 
   private currentOrderId: string | null = null;
 
@@ -29,46 +31,59 @@ export class OrderUpdateModalComponent implements OnInit {
     private fb: FormBuilder,
     private store: Store,
     private ordersService: OrdersService,
+    private menuItemsService: MenuItemsService,
     private userService: UserService,
     private toastr: ToastrService,
   ) {
     const currentDate = new Date().toISOString().split('T')[0];
     this.minDate = currentDate;
     this.orderForm = this.fb.group({
-      user: ['', Validators.required],
-      totalCost: ['', [Validators.required, Validators.pattern(/^-?(0|[1-9]\d*)?(\.\d+)?(?<=\d)$/)]],
+      userEmail: ['', Validators.required],
       createdOn: ['', Validators.required],
       status: ['', Validators.required],
       paid: [false, Validators.required],
-      menuItems: this.fb.array([]),
+      menuItemQuantities: this.fb.group({}),
     });
     this.users$ = this.userService.getAllUsers();
   }
 
   ngOnInit(): void {
+
+      this.menuItems$ = this.menuItemsService.getAllMenuItems(1, 100).pipe(
+        map(response => response.items)
+      );
+
     this.store.select(selectOrderToUpdate).subscribe((order) => {
       if (order) {
-        this.currentOrderId = order.$id;
+        this.currentOrderId = order.id;
         this.orderForm.patchValue({
-          user: order.user?.$id,
-          totalCost: order.totalCost,
+          userEmail: order.userEmail,
           paid: order.paid,
           createdOn: formatDate(order.createdOn, 'yyyy-MM-dd', 'en-US'),
-          status: order.status,
+          status: order.status.toUpperCase(),
         });
 
-        // Directly extract the titles from the order object
-        this.orderedMenuItemTitles$ = of(order.menuItems.map((item) => item.title));
+        // Set selected menu items
+        const menuItemQuantitiesGroup = this.orderForm.get('menuItemQuantities') as FormGroup;
+        Object.entries(order.menuItemQuantities).forEach(([id, qty]) => {
+          menuItemQuantitiesGroup.addControl(id, new FormControl(qty, Validators.min(1)));
+        });
       }
     });
   }
 
   updateOrder(): void {
     if (this.orderForm.valid && this.currentOrderId) {
-      const { menuItems, ...orderData } = this.orderForm.value; // DON'T INCLUDE MENU ITEMS ID'S IN THE UPDATE DATA
+      const orderData = this.orderForm.value;
+
+      const menuItemQuantities = this.orderForm.get('menuItemQuantities')?.value;
+      if (!menuItemQuantities || Object.keys(menuItemQuantities).length === 0) {
+        this.toastr.error('Order must contain at least one menu item');
+        return;
+      }
 
       // Convert 'createdOn' to ISO 8601 format (YYYY-MM-DD) (Appwrite problems...)
-      formatDate(orderData.createdOn, 'yyyy-MM-dd', 'en-US')
+      orderData.createdOn = formatDate(orderData.createdOn, 'yyyy-MM-ddTHH:mm:ss', 'en-US');
       this.ordersService.updateOrder(this.currentOrderId, orderData).subscribe({
         next: (order) => {
           this.closeModal();
@@ -87,6 +102,47 @@ export class OrderUpdateModalComponent implements OnInit {
           this.toastr.error(`Form Invalid - control: ${key}, Error: ${keyError}`);
         });
       });
+    }
+  }
+
+  onMenuItemSelected(event: Event, menuItemId: number): void {
+    const inputElement = event.target as HTMLInputElement;
+    const menuItemQuantitiesGroup = this.orderForm.get('menuItemQuantities') as FormGroup;
+
+    if (inputElement.checked) {
+      menuItemQuantitiesGroup.addControl(menuItemId.toString(), new FormControl(1, Validators.min(1)));
+    } else {
+      menuItemQuantitiesGroup.removeControl(menuItemId.toString());
+    }
+  }
+
+  isMenuItemSelected(menuItemId: number): boolean {
+    const menuItemQuantitiesGroup = this.orderForm.get('menuItemQuantities') as FormGroup;
+    return menuItemQuantitiesGroup.controls.hasOwnProperty(menuItemId.toString());
+  }
+
+  getQuantity(menuItemId: number): number {
+    const menuItemQuantitiesGroup = this.orderForm.get('menuItemQuantities') as FormGroup;
+    return menuItemQuantitiesGroup.get(menuItemId.toString())?.value || 1;
+  }
+
+  onQuantityChange(menuItemId: number, event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    const menuItemQuantitiesGroup = this.orderForm.get('menuItemQuantities') as FormGroup;
+    menuItemQuantitiesGroup.get(menuItemId.toString())?.setValue(parseInt(inputElement.value, 10));
+  }
+
+  increaseQuantity(menuItemId: number): void {
+    const menuItemQuantitiesGroup = this.orderForm.get('menuItemQuantities') as FormGroup;
+    const currentQuantity = this.getQuantity(menuItemId);
+    menuItemQuantitiesGroup.get(menuItemId.toString())?.setValue(currentQuantity + 1);
+  }
+
+  decreaseQuantity(menuItemId: number): void {
+    const menuItemQuantitiesGroup = this.orderForm.get('menuItemQuantities') as FormGroup;
+    const currentQuantity = this.getQuantity(menuItemId);
+    if (currentQuantity > 1) {
+      menuItemQuantitiesGroup.get(menuItemId.toString())?.setValue(currentQuantity - 1);
     }
   }
 
