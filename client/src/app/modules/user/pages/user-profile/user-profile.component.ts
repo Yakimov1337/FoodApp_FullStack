@@ -1,21 +1,31 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, take } from 'rxjs';
-import { User } from '../../../../core/models';
+import { take } from 'rxjs';
+import { User, UserUpdate } from '../../../../core/models';
 import { Store, select } from '@ngrx/store';
 import { selectCurrentUser } from '../../../../core/state/auth/auth.selectors';
 import { UserService } from '../../../../services/user.service';
-import { AvatarService } from '../../../../services/avatar.service';
 import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
 import { LoaderComponent } from '../../../../shared/components/loader/loader.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { animate, style, transition, trigger } from '@angular/animations';
+import * as AuthActions from '../../../../core/state/auth/auth.actions';
+import { urlFormValidator } from '../../../../shared/validators/url-validator';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, LoaderComponent, ButtonComponent],
   templateUrl: './user-profile.component.html',
+  animations: [
+    trigger('slideInDown', [
+      transition(':enter', [
+        style({ transform: 'translateY(-100%)', opacity: 0 }),
+        animate('1s ease-out', style({ transform: 'translateY(0)', opacity: 1 })),
+      ]),
+    ]),
+  ],
 })
 export class UserProfileComponent implements OnInit {
   currentUser: User | null = null;
@@ -31,13 +41,13 @@ export class UserProfileComponent implements OnInit {
     private store: Store,
     private userService: UserService,
     private toastr: ToastrService,
-    private avatarService: AvatarService,
   ) {
     this.userForm = this.fb.group({
-      name: [''],
+      name: ['', Validators.required],
       phoneNumber: ['', [Validators.pattern(/^\+?(\d[\s-]?){1,11}\d$/)]],
       email: [{ value: '', disabled: true }],
       role: [{ value: '', disabled: true }],
+      imageUrl: ['', [urlFormValidator()]],
     });
   }
 
@@ -45,12 +55,28 @@ export class UserProfileComponent implements OnInit {
     this.store.pipe(select(selectCurrentUser), take(1)).subscribe((user: User | null) => {
       if (user) {
         this.currentUser = user;
-        this.currentUserId = user.$id;
+        this.currentUserId = user.id;
         this.userForm.patchValue({
           name: user.name,
           email: user.email,
           phoneNumber: user.phoneNumber,
           role: user.role,
+          imageUrl: user.imageUrl,
+        });
+        this.previewUrl = user.imageUrl?.toString() || null;
+      }
+    });
+
+    // Subscribe to user updates
+    this.store.pipe(select(selectCurrentUser)).subscribe((user: User | null) => {
+      if (user) {
+        this.currentUser = user;
+        this.userForm.patchValue({
+          name: user.name,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          role: user.role,
+          imageUrl: user.imageUrl,
         });
         this.previewUrl = user.imageUrl?.toString() || null;
       }
@@ -62,29 +88,41 @@ export class UserProfileComponent implements OnInit {
       const formValues = this.userForm.getRawValue();
       const hasChanges =
         this.currentUser &&
-        (this.currentUser.name !== formValues.name || this.currentUser.phoneNumber !== formValues.phoneNumber);
+        (this.currentUser.name !== formValues.name ||
+          this.currentUser.phoneNumber !== formValues.phoneNumber ||
+          this.currentUser.imageUrl.toString() !== formValues.imageUrl);
+
       if (!hasChanges) {
-        this.toastr.info('No changes detected. No update required.'); // STOP if no changes are made
+        this.toastr.info('No changes detected. No update required.');
         return;
       }
-      // No more than 1 white spaces
+
       formValues.name = formValues.name.trim().replace(/\s+/g, ' ');
-      // Reflect this change back to the form control
       this.userForm.get('name')?.setValue(formValues.name, { emitEvent: false });
-      this.isUpdatingInfo = true;
-      this.userService.updateUser(this.currentUserId, this.userForm.value).subscribe({
-        next: () => {
-          this.toastr.success('User information updated successfully');
-          this.isUpdatingInfo = false;
-          setTimeout(() => window.location.reload(), 100); // doing this to retrieve new user object in ngrx store (todo: create effect for user update)
-        },
-        error: (error) => {
-          this.toastr.error('Failed to update user information');
-          this.isUpdatingInfo = false;
-          console.error('Failed to update user information:', error);
-        },
-      });
+
+      if (!formValues.imageUrl) {
+        this.toastr.error('Image URL is required.');
+        return;
+      }
+
+      // this.isUpdatingInfo = true;
+
+      const updateUserDTO: UserUpdate = {
+        name: formValues.name,
+        phoneNumber: formValues.phoneNumber,
+        role: this.currentUser!.role.toUpperCase(),
+        imageUrl: formValues.imageUrl,
+      };
+
+      this.store.dispatch(AuthActions.updateUserProfile({ id: this.currentUserId, user: updateUserDTO }));
+    } else {
+      this.markAllAsTouched();
+      this.toastr.error('Please fill out all required fields correctly.');
     }
+  }
+
+  markAllAsTouched(): void {
+    this.userForm.markAllAsTouched();
   }
 
   handleFileInput(event: Event): void {
@@ -93,37 +131,7 @@ export class UserProfileComponent implements OnInit {
 
     if (this.selectedFile) {
       this.previewUrl = URL.createObjectURL(this.selectedFile);
-    }
-  }
-
-  saveAvatar(): void {
-    if (this.selectedFile && this.currentUserId) {
-      this.isUploadingAvatar = true;
-      this.avatarService
-        .uploadAvatar(this.selectedFile, this.currentUserId)
-        .then(() => {
-          this.toastr.success('Avatar updated successfully');
-          this.isUploadingAvatar = false;
-          setTimeout(() => window.location.reload(), 100); // doing this to retrieve new user object in ngrx store (todo: create effect for user update)
-        })
-        .catch((error) => {
-          this.toastr.error('Error updating avatar');
-          this.isUploadingAvatar = false;
-          console.error('Error uploading avatar:', error);
-        });
-    }
-  }
-
-  useDefaultAvatar(): void {
-    if (this.currentUserId && this.currentUser?.email) {
-      this.isUploadingAvatar = true;
-      this.avatarService
-        .setDefaultAvatar(this.currentUserId, this.currentUser.email)
-        .then(() => {
-          this.isUploadingAvatar = false;
-          setTimeout(() => window.location.reload(), 100); // doing this to retrieve new user object in ngrx store (todo: create effect for user update)
-        })
-        .catch((error) => console.error(error));
+      this.toastr.info('Feature under maintenance');
     }
   }
 }
