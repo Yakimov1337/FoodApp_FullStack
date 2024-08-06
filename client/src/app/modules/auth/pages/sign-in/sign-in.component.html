@@ -114,6 +114,9 @@
     <app-button type="button" (click)="loginAsModerator()" full impact="bold" tone="info" shape="rounded" size="medium">
       <ng-container *ngIf="!isLoadingModerator; else spinnerTemplate"> Test Moderator session </ng-container>
     </app-button>
+    <app-button type="button" (click)="swaggerRedirect()" full impact="bold" tone="success" shape="rounded" size="medium">
+      <span class="text-white"> Swagger API Documentation </span>
+    </app-button>
   </div>
 
   <!-- Sign-up -->

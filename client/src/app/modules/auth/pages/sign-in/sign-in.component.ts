@@ -8,7 +8,7 @@ import { AuthService } from '../../../../services/auth.service';
 import { Store } from '@ngrx/store';
 import * as AuthActions from '../../../../core/state/auth/auth.actions';
 import { ToastrService } from 'ngx-toastr';
-import { environment } from '../../../../../environments/environment.local';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-sign-in',
@@ -23,6 +23,7 @@ export class SignInComponent implements OnInit {
   isLoadingUser = false;
   isLoadingAdmin = false;
   isLoadingModerator = false;
+  baseUrl: string = '';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -33,6 +34,7 @@ export class SignInComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.baseUrl = this.removeApiSegment(environment.apiUrl);
     this.form = this.formBuilder.group({
       email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -83,6 +85,15 @@ export class SignInComponent implements OnInit {
 
   togglePasswordTextType() {
     this.passwordTextType = !this.passwordTextType;
+  }
+
+  private removeApiSegment(url: string): string {
+    return url.replace(/\/api$/, '');
+  }
+  swaggerRedirect() {
+    // Remove the '/api' segment from apiUrl to get baseUrl (workaround for now)
+    const url = `${this.baseUrl}/swagger-ui/index.html#/`;
+    window.open(url, '_blank');
   }
 
   googleAuth(event: Event) {
