@@ -6,7 +6,7 @@ import { Review, ReviewSubmission } from '../core/models';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { environment } from '../../environments/environment.local';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',

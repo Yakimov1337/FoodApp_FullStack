@@ -6,7 +6,7 @@ import { Role, User, UserUpdate } from '../core/models';
 import { BaseService } from './base.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { environment } from '../../environments/environment.local';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',

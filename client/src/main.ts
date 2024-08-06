@@ -1,6 +1,6 @@
 /// <reference types="@angular/localize" />
 import { APP_INITIALIZER, enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
-import { environment } from './environments/environment.local';
+import { environment } from './environments/environment';
 import { AppComponent } from './app/app.component';
 import { AppRoutingModule } from './app/app-routing.module';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
