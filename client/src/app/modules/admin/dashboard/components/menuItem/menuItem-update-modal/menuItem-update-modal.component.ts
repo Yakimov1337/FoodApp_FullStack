@@ -19,7 +19,7 @@ import { ToastrService } from 'ngx-toastr';
 export class MenuItemUpdateModalComponent implements OnInit {
   menuItemForm: FormGroup;
   // menuItems$: Observable<MenuItem[]>;
-  private currentMenuItemId: string | null = null;
+  private currentMenuItemId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -42,9 +42,8 @@ export class MenuItemUpdateModalComponent implements OnInit {
   ngOnInit(): void {
     // Subscribe to the current MenuItem to update
     this.store.select(selectMenuItemToUpdate).subscribe((menuItem) => {
-      console.log(menuItem);
       if (menuItem) {
-        this.currentMenuItemId = menuItem.$id;
+        this.currentMenuItemId = menuItem.id;
         this.menuItemForm.patchValue({
           title: menuItem.title,
           description: menuItem.description,
@@ -57,15 +56,14 @@ export class MenuItemUpdateModalComponent implements OnInit {
   }
 
   updateMenuItem(): void {
-    console.log(this.menuItemForm.valid)
     if (this.menuItemForm.valid && this.currentMenuItemId) {
       this.menuItemsService.updateMenuItem(this.currentMenuItemId, this.menuItemForm.value).subscribe({
         next: (MenuItem) => {
           this.closeModal();
-          this.menuItemsService.menuItemCreated(MenuItem);
+          this.menuItemsService.menuItemUpdated(MenuItem);
           this.toastr.success('Menu item updated successfully!');
         },
-        error: (error) => this.toastr.error('Error updating menu item:', error),
+        error: (error) => this.toastr.error('Error updating menu item', error),
       });
     }  else {
       this.menuItemForm.markAllAsTouched();

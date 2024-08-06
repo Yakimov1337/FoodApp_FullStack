@@ -14,12 +14,13 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './menuItem-delete-modal.component.html',
 })
 export class MenuItemDeleteModalComponent {
-  menuItemIdToDelete: string | undefined | null = null;
+  menuItemIdToDelete: number | undefined | null = null;
   private subscription = new Subscription();
 
   constructor(private store: Store, private MenuItemsService: MenuItemsService, private toastr: ToastrService) {
     this.subscription.add(
       this.store.select(selectDeleteMenuItemId).subscribe((MenuItemId) => {
+        console.log(MenuItemId)
         this.menuItemIdToDelete = MenuItemId;
       }),
     );
@@ -36,7 +37,7 @@ export class MenuItemDeleteModalComponent {
         this.toastr.success(`Menu item with ID ${this.menuItemIdToDelete} deleted successfully!`)
         this.closeModal();
       },
-      error: (error) => this.toastr.error('Failed to delete menu item!:', error)
+      error: (error) => this.toastr.error('Failed to delete menu item!:', error.message)
     });
   }
 
