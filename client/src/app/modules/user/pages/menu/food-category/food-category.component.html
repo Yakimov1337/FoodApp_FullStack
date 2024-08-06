@@ -1,4 +1,4 @@
-<section class="body-font relative overflow-hidden pb-12 ">
+<section class="body-font relative overflow-hidden pb-8">
   <!-- Background with opacity -->
   <div
     class="absolute inset-0 z-0"
@@ -10,14 +10,14 @@
     ">
     <div class="absolute inset-0 bg-black opacity-50"></div>
   </div>
-  <div class="container relative z-10 mx-auto px-5 pt-24 pb-4">
+  <div class="container relative z-10 mx-auto px-5 pt-24 pb-2">
     <!-- Section Title -->
-    <div class="mb-10 flex w-full flex-col flex-wrap items-center text-center">
-      <h1 class="title-font mb-2 text-2xl font-medium text-white sm:text-3xl">
-        Our Delicious <span class="text-primary">Menu</span>
+    <div class="mb-4 flex w-full flex-col flex-wrap items-center text-center">
+      <h1 class="title-font mb-2 text-2xl font-medium text-white sm:text-5xl">
+        {{ 'MENU.TITLE' | translate }} <span class="text-primary"> {{ 'MENU.MENU' | translate }} </span>
       </h1>
       <p class="w-full leading-relaxed text-white lg:w-1/2">
-        Explore our wide variety of dishes. There's something for everyone!
+        {{ 'MENU.SUB_TITLE' | translate }}
       </p>
     </div>
 
@@ -27,7 +27,11 @@
         <button
           (click)="selectCategory(category)"
           [@slideIn]="determineAnimation(i)"
-          [ngClass]="selectedCategory === category.value.toLowerCase() ? 'bg-gradient-to-tr from-primary to-transparent text-white opacity-90' : 'bg-transparent text-white'"
+          [ngClass]="
+            selectedCategory === category.value.toLowerCase()
+              ? 'bg-gradient-to-tr from-primary to-transparent text-white opacity-90'
+              : 'bg-transparent text-white'
+          "
           class="flex h-32 w-32 transform flex-col items-center justify-center rounded-lg border-2 border-primary shadow-lg shadow-primary transition-transform duration-300 hover:scale-110 hover:shadow-xl">
           <!-- Category Icon -->
           <img [src]="category.icon" alt="{{ category.label }}" class="mb-2 h-24 w-24" />

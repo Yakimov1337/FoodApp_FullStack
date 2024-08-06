@@ -8,11 +8,12 @@ import { Store, select } from '@ngrx/store';
 import { selectCurrentUser } from '../../../../../core/state/auth/auth.selectors';
 import { CartVisibilityService } from '../../../../../services/cart-visibility.service';
 import { selectCartItemCount } from '../../../../../core/state/shopping-cart/cart.selectors';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, ProfileMenuComponent, RouterLink],
+  imports: [RouterOutlet, CommonModule, ProfileMenuComponent, RouterLink,TranslateModule],
   templateUrl: './navbar.component.html',
 })
 export class NavbarComponent {
@@ -21,8 +22,9 @@ export class NavbarComponent {
   mobileMenuOpen = false;
   cartItemCount$: Observable<number>;
   user$: Observable<User | null>;
+  selectedLanguage: string;
 
-  constructor(private router: Router, private store: Store, private cartVisibilityService: CartVisibilityService) {
+  constructor(private router: Router, private store: Store, private cartVisibilityService: CartVisibilityService,private translate: TranslateService) {
     this.router.events.subscribe((event: Event) => {
       if (event instanceof NavigationEnd) {
         if (this.mainContent) {
@@ -32,6 +34,20 @@ export class NavbarComponent {
     });
     this.user$ = this.store.pipe(select(selectCurrentUser));
     this.cartItemCount$ = this.store.select(selectCartItemCount);
+    // Load the saved language preference from local storage
+    this.selectedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+    this.translate.use(this.selectedLanguage);
+  }
+
+  switchLanguage(event: any): void {
+    const selectElement = event.target as HTMLSelectElement;
+    const language = selectElement.value;
+
+    // Set the selected language
+    this.translate.use(language);
+
+    // Save the selected language to local storage
+    localStorage.setItem('selectedLanguage', language);
   }
 
   ngOnInit(): void {

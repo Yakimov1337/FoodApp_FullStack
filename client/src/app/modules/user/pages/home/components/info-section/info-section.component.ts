@@ -1,10 +1,11 @@
 import { Component, AfterViewInit, ElementRef, ViewChild, NgZone } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-info-section',
   standalone: true,
-  imports: [],
+  imports: [TranslateModule],
   templateUrl: './info-section.component.html',
   animations: [
     trigger('slideInLeft', [

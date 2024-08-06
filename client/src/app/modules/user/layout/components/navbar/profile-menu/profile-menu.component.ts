@@ -10,13 +10,14 @@ import { ClickOutsideDirective } from '../../../../../../shared/directives/click
 import { User } from '../../../../../../core/models';
 import { selectCurrentUser } from '../../../../../../core/state/auth/auth.selectors';
 import { ThemeService } from '../../../../../../services/theme.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'app-profile-menu',
   templateUrl: './profile-menu.component.html',
   standalone: true,
-  imports: [ClickOutsideDirective, NgClass, RouterLink, AngularSvgIconModule, CommonModule,RouterModule],
+  imports: [ClickOutsideDirective, NgClass, RouterLink, AngularSvgIconModule, CommonModule,RouterModule,TranslateModule],
   animations: [
     trigger('openClose', [
       state(
@@ -45,17 +46,22 @@ export class ProfileMenuComponent implements OnInit {
   public isOpen = false;
   public profileMenu = [
     {
-      title: 'Your Profile',
+      key: 'PROFILE_MENU.PROFILE',
       icon: './assets/icons/heroicons/outline/user-circle.svg',
       link: '/profile',
     },
     {
-      title: 'My Orders',
+      key: 'PROFILE_MENU.ORDERS',
       icon: './assets/icons/heroicons/outline/cog-6-tooth.svg',
       link: '/orders',
     },
     {
-      title: 'Log out',
+      key: 'PROFILE_MENU.REVIEWS',
+      icon: './assets/icons/heroicons/outline/star.svg',
+      link: '/reviews',
+    },
+    {
+      key: 'PROFILE_MENU.LOGOUT',
       icon: './assets/icons/heroicons/outline/logout.svg',
       link: '/auth',
     },
@@ -127,4 +133,5 @@ export class ProfileMenuComponent implements OnInit {
       return { ...theme, color: color };
     });
   }
+
 }

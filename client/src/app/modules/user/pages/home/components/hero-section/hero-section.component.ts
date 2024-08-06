@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { animate, style, transition, trigger } from '@angular/animations';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-hero-section',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink,  TranslateModule],
   templateUrl: './hero-section.component.html',
   animations: [
     trigger('slideInLeft', [
@@ -22,5 +23,5 @@ import { animate, style, transition, trigger } from '@angular/animations';
   ],
 })
 export class HeroSectionComponent {
-
+  constructor(private translate: TranslateService) {}
 }

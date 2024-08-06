@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { animate, style, transition, trigger } from '@angular/animations';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-about-us',
   standalone: true,
-  imports: [],
+  imports: [TranslateModule,CommonModule],
   templateUrl: './about-us.component.html',
   animations: [
     trigger('slideInDown', [
@@ -16,5 +18,21 @@ import { animate, style, transition, trigger } from '@angular/animations';
   ],
 })
 export class AboutUsComponent {
+  translationData: any = {};
 
+  constructor(private translate: TranslateService) {}
+
+  ngOnInit(): void {
+    this.loadTranslations();
+    this.translate.onLangChange.subscribe(() => this.loadTranslations());
+  }
+
+  private loadTranslations(): void {
+    this.translate.get([
+      'ABOUT_US.UNIQUENESS.FEATURES',
+      'ABOUT_US.GET_INVOLVED.OPPORTUNITIES'
+    ]).subscribe(translations => {
+      this.translationData = translations;
+    });
+  }
 }

@@ -32,6 +32,8 @@
     "@ngrx/effects": "^17.1.1",
     "@ngrx/store": "^17.1.1",
     "@ngrx/store-devtools": "^17.1.1",
+    "@ngx-translate/core": "^15.0.0",
+    "@ngx-translate/http-loader": "^8.0.0",
     "@stripe/stripe-js": "^3.1.0",
     "@tailwindcss/aspect-ratio": "^0.4.0",
     "@tailwindcss/forms": "^0.5.2",

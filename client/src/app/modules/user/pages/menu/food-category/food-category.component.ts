@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { trigger, transition, style, animate, state } from '@angular/animations';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-food-category',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,TranslateModule],
   templateUrl: './food-category.component.html',
   animations: [
     trigger('slideIn', [
@@ -14,14 +15,17 @@ import { trigger, transition, style, animate, state } from '@angular/animations'
       state('slideInFromRight', style({ transform: 'translateX(0)', opacity: 1 })), // Define end state for clarity
       transition('* => slideInFromLeft', [
         style({ transform: 'translateX(-100%)', opacity: 0 }),
-        animate('1s ease-out')
+        animate('1s ease-out'),
       ]),
       transition('* => slideInFromRight', [
         style({ transform: 'translateX(100%)', opacity: 0 }),
-        animate('1s ease-out')
+        animate('1s ease-out'),
       ]),
-    ])
-  ]
+      state('fadeInOut', style({ opacity: 1 })),
+      transition(':enter', [style({ opacity: 0 }), animate('3.5s ease-in', style({ opacity: 1 }))]),
+      transition(':leave', [animate('0.5s ease-out', style({ opacity: 0 }))]),
+    ]),
+  ],
 })
 export class FoodCategoryComponent implements OnInit {
   selectedCategory = 'burger'; // Default category

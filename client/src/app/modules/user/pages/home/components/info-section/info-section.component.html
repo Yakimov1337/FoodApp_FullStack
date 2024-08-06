@@ -1,11 +1,9 @@
-SVG Divider Here
+<!-- SVG Divider Here -->
 <div class="w-full">
-  <!-- Example background color -->
   <svg class="h-24 w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
     <path
       d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
       fill="#E21D48"></path>
-    <!-- Example primary color fill -->
   </svg>
 </div>
 
@@ -13,7 +11,7 @@ SVG Divider Here
 <div class="py-8 px-4">
   <div class="container mx-auto">
     <!-- First Row - Image Left, Text Right on md screens -->
-    <div class="mb-8 flex flex-col items-center justify-center gap-8 md:mb-16 md:flex-row" >
+    <div class="mb-8 flex flex-col items-center justify-center gap-8 md:mb-16 md:flex-row">
       <img
         #firstImage
         [@slideInLeft]="firstVisible ? true : false"
@@ -23,19 +21,20 @@ SVG Divider Here
         class="h-auto w-full md:max-w-md" />
       <div class="text-center md:text-left">
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white md:text-4xl">
-          Best Service to fulfill your
-          <span class="text-primary">expectations</span>
+          {{ 'SERVICE.FIRST_ROW.TITLE' | translate }}
+          <span class="text-primary">{{ 'SERVICE.FIRST_ROW.HIGHLIGHT' | translate }}</span>
         </h2>
         <p class="mt-2 text-gray-500 dark:text-white">
-          It’s not just about bringing you good food from your favourite restaurants. It’s also about making a
-          connection.
+          {{ 'SERVICE.FIRST_ROW.DESCRIPTION' | translate }}
         </p>
-        <a href="#" class="mt-4 inline-block text-primary hover:opacity-75">Read More</a>
+        <a href="#" class="mt-4 inline-block text-primary hover:opacity-75">
+          {{ 'SERVICE.FIRST_ROW.LINK_TEXT' | translate }}
+        </a>
       </div>
     </div>
 
     <!-- Second Row - Image Right, Text Left on md screens -->
-    <div class="flex flex-col items-center justify-center gap-8 md:flex-row-reverse" >
+    <div class="flex flex-col items-center justify-center gap-8 md:flex-row-reverse">
       <img
         #secondImage
         [@slideInRight]="secondVisible ? true : false"
@@ -45,14 +44,15 @@ SVG Divider Here
         class="h-auto w-full md:max-w-md" />
       <div class="text-center md:text-left">
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white md:text-4xl">
-          Dedicated to Delight
-          <span class="text-primary">YOU</span>
+          {{ 'SERVICE.SECOND_ROW.TITLE' | translate }}
+          <span class="text-primary">{{ 'SERVICE.SECOND_ROW.HIGHLIGHT' | translate }}</span>
         </h2>
         <p class="mt-2 text-gray-500 dark:text-white">
-          Customer delight is the process of surpassing customers' expectations to increase satisfaction, loyalty, and
-          advocacy.
+          {{ 'SERVICE.SECOND_ROW.DESCRIPTION' | translate }}
         </p>
-        <a href="#" class="mt-4 inline-block text-primary hover:opacity-75">Read More</a>
+        <a href="#" class="mt-4 inline-block text-primary hover:opacity-75">
+          {{ 'SERVICE.SECOND_ROW.LINK_TEXT' | translate }}
+        </a>
       </div>
     </div>
   </div>
@@ -68,6 +68,5 @@ SVG Divider Here
     <path
       d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
       fill="#E21D48"></path>
-    <!-- Example primary color fill -->
   </svg>
 </div>

@@ -5,24 +5,36 @@
     <!-- Logo visible on all screen sizes -->
     <a routerLink="/" class="mx-auto flex items-center">
       <svg viewBox="0 0 512 512" class="fill-current text-primary" height="2em" width="2em">
-        <path
-          d="M368 128h.09M479.55 96h-91.06l8.92-35.66 38.32-13.05c8.15-2.77 13-11.43 10.65-19.71a16 16 0 00-20.54-10.73l-47 16a16 16 0 00-10.36 11.27L355.51 96H224.45c-8.61 0-16 6.62-16.43 15.23A16 16 0 00224 128h2.75l1 8.66A8.3 8.3 0 00236 144c39 0 73.66 10.9 100.12 31.52A121.9 121.9 0 01371 218.07a123.4 123.4 0 0110.12 29.51 7.83 7.83 0 003.29 4.88 72 72 0 0126.38 86.43 7.92 7.92 0 00-.15 5.53A96 96 0 01416 376c0 22.34-7.6 43.63-21.4 59.95a80.12 80.12 0 01-28.78 21.67 8 8 0 00-4.21 4.37 108.19 108.19 0 01-17.37 29.86 2.5 2.5 0 001.9 4.11h49.21a48.22 48.22 0 0047.85-44.14L477.4 128h2.6a16 16 0 0016-16.77c-.42-8.61-7.84-15.23-16.45-15.23z" />
-        <path
-          d="M108.69 320a23.87 23.87 0 0117 7l15.51 15.51a4 4 0 005.66 0L162.34 327a23.87 23.87 0 0117-7h196.58a8 8 0 008.08-7.92V312a40.07 40.07 0 00-32-39.2c-.82-29.69-13-54.54-35.51-72C295.67 184.56 267.85 176 236 176h-72c-68.22 0-114.43 38.77-116 96.8A40.07 40.07 0 0016 312a8 8 0 008 8zM185.94 352a8 8 0 00-5.66 2.34l-22.14 22.15a20 20 0 01-28.28 0l-22.14-22.15a8 8 0 00-5.66-2.34h-69.4a15.93 15.93 0 00-15.76 13.17A65.22 65.22 0 0016 376c0 30.59 21.13 55.51 47.26 56 2.43 15.12 8.31 28.78 17.16 39.47C93.51 487.28 112.54 496 134 496h132c21.46 0 40.49-8.72 53.58-24.55 8.85-10.69 14.73-24.35 17.16-39.47 26.13-.47 47.26-25.39 47.26-56a65.22 65.22 0 00-.9-10.83A15.93 15.93 0 00367.34 352z" />
+        <!-- SVG path here -->
       </svg>
-
-      <span class="text-dark ml-1 text-xl font-bold dark:text-white"
-        >Food <span class="text-primary">Squad</span>
+      <span class="text-dark ml-1 text-xl font-bold dark:text-white">
+        Food <span class="text-primary">Squad</span>
       </span>
     </a>
 
     <!-- Navigation Links centered on larger screens and hidden on smaller ones -->
     <div class="hidden flex-grow items-center justify-center space-x-6 dark:text-white md:flex">
-      <a routerLink="/" class="transition duration-300 hover:text-primary">Home</a>
-      <a routerLink="/menu" class="transition duration-300 hover:text-primary">Menu</a>
-      <a routerLink="/about-us" class="transition duration-300 hover:text-primary">About us</a>
-      <a routerLink="/contact-us" class="transition duration-300 hover:text-primary">Contact us</a>
+      <a routerLink="/" class="transition duration-300 hover:text-primary">{{ 'HEADER.HOME' | translate }}</a>
+      <a routerLink="/menu" class="transition duration-300 hover:text-primary">{{ 'HEADER.MENU' | translate }}</a>
+      <a routerLink="/about-us" class="transition duration-300 hover:text-primary">{{
+        'HEADER.ABOUT_US' | translate
+      }}</a>
+      <a routerLink="/contact-us" class="transition duration-300 hover:text-primary">{{
+        'HEADER.CONTACT_US' | translate
+      }}</a>
     </div>
+
+    <!-- Language Selector -->
+    <select
+    [value]="selectedLanguage"
+    (change)="switchLanguage($event)"
+    class="mr-4 hidden w-28 h-10 p-2  rounded-xl border-2 text-sm outline-none transition duration-300 ease-in-out focus:ring-2 focus:ring-primary
+    bg-white dark:bg-background/50 text-gray-800 dark:text-white
+    border-gray-300 dark:border-gray-600
+    hover:bg-gray-100 dark:hover:bg-gray-700/50 md:flex">
+    <option value="en">English</option>
+    <option value="bg">Български</option>
+  </select>
 
     <!-- Right-aligned Admin and Profile buttons for all screens -->
     <div class="absolute right-4 flex items-center space-x-4 md:relative md:right-auto md:top-auto">
@@ -32,9 +44,11 @@
           routerLink="/admin"
           *ngIf="user.role !== 'Normal'"
           class="hidden items-center truncate rounded-lg bg-primary px-2 py-2 text-white hover:opacity-75 md:flex">
-          Admin <span class="ml-1 hidden lg:inline-flex">Dashboard</span>
+          {{ 'HEADER.ADMIN_DASHBOARD' | translate }}
         </button>
       </ng-container>
+
+      <!-- Cart Icon with item count -->
       <div class="relative">
         <svg
           (click)="toggleCart()"
@@ -49,10 +63,12 @@
             stroke-linejoin="round"
             d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
         </svg>
-        <span class="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-2 py-1 text-xs font-semibold text-white">
+        <span
+          class="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-2 py-1 text-xs font-semibold text-white">
           {{ (cartItemCount$ | async) ?? 0 }}
         </span>
       </div>
+
       <!-- Profile Menu -->
       <app-profile-menu></app-profile-menu>
     </div>
@@ -65,28 +81,32 @@
     </button>
   </nav>
 
-  <!-- Mobile Menu, assuming a method to handle visibility without mobileMenuOpen -->
+  <!-- Mobile Menu, assuming a method to handle visibility -->
   <div class="md:hidden" *ngIf="isMobileMenuVisible()">
     <nav class="bg-white py-4 shadow-md">
-      <!-- Mobile navigation links  -->
-      <a routerLink="/" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary">Home</a>
-      <a routerLink="/menu" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary">Menu</a>
-      <a routerLink="/services" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary"
-        >Services</a
-      >
-      <a routerLink="/about-us" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary"
-        >About us</a
-      >
-      <a routerLink="/contact-us" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary"
-        >Contact us</a
-      >
+      <!-- Mobile navigation links -->
+      <a routerLink="/" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary">{{
+        'HEADER.HOME' | translate
+      }}</a>
+      <a routerLink="/menu" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary">{{
+        'HEADER.MENU' | translate
+      }}</a>
+      <a routerLink="/services" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary">{{
+        'HEADER.SERVICES' | translate
+      }}</a>
+      <a routerLink="/about-us" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary">{{
+        'HEADER.ABOUT_US' | translate
+      }}</a>
+      <a routerLink="/contact-us" class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary">{{
+        'HEADER.CONTACT_US' | translate
+      }}</a>
       <div *ngIf="user$ | async as user">
         <a
           *ngIf="user.role !== 'Normal'"
           class="block px-6 py-2 text-gray-600 transition duration-300 hover:text-primary"
-          routerLink="/admin"
-          >Admin Dashboard</a
-        >
+          routerLink="/admin">
+          {{ 'HEADER.ADMIN_DASHBOARD' | translate }}
+        </a>
       </div>
     </nav>
   </div>

@@ -10,14 +10,14 @@ import {
   ViewChildren,
 } from '@angular/core';
 import { AngularSvgIconModule } from 'angular-svg-icon';
-import { ToastrService } from 'ngx-toastr';
 import { StripeService } from '../../../../../../services/stripe.service';
-import { trigger, state, style, transition, animate } from '@angular/animations';
+import { trigger, style, transition, animate } from '@angular/animations';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pricing',
   standalone: true,
-  imports: [AngularSvgIconModule, CommonModule],
+  imports: [AngularSvgIconModule, CommonModule, TranslateModule],
   templateUrl: './pricing.component.html',
   animations: [
     trigger('enterFromLeft', [
@@ -59,36 +59,18 @@ export class PricingComponent implements AfterViewInit {
       }
     });
   }
-
   plans = [
     {
-      name: 'Basic Bite',
+      key: 'BASIC_BITE',
       id: 'price_1P0kaMHTUTLeEgjn0T3mo9fx',
-      description: 'Ideal for small restaurants or startups looking to expand their delivery options.',
-      price: '$19',
-      frequency: '/mo',
-      features: ['Up to 50 delivery orders', 'Basic analytics', 'Community support'],
-      actionText: 'Get Started',
-      actionLink: '#',
     },
     {
-      name: 'Gourmet Growth',
+      key: 'GOURMET_GROWTH',
       id: 'price_1P0kJCHTUTLeEgjnRilGp9Db',
-      description: 'Perfect for growing businesses aiming to increase their market presence.',
-      price: '$39',
-      frequency: '/mo',
-      features: ['Unlimited delivery orders', 'Advanced analytics', 'Priority support'],
-      actionText: 'Get Started',
-      actionLink: '#',
     },
     {
-      name: 'Epicurean Enterprise',
+      key: 'EPICUREAN_ENTERPRISE',
       id: 'price_1P0kb5HTUTLeEgjn4zAC25My',
-      description: 'Large-scale solutions for established restaurants with custom needs.',
-      price: 'Custom',
-      features: ['Custom order volume', 'Personalized menu consulting', 'Dedicated account manager'],
-      actionText: 'Contact Sales',
-      actionLink: '#',
     },
   ];
 

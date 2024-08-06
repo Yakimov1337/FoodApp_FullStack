@@ -1,3 +1,4 @@
+/// <reference types="@angular/localize" />
 import { APP_INITIALIZER, enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
 import { environment } from './environments/environment.local';
 import { AppComponent } from './app/app.component';
@@ -14,11 +15,13 @@ import { provideToastr } from 'ngx-toastr';
 import { AuthStateService } from './app/services/auth-state.service';
 import { authReducer } from './app/core/state/auth/auth.reducer';
 import { AuthEffects } from './app/core/state/auth/auth.effects';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthInterceptor } from './app/core/interceptor/interceptor';
 import { cartReducer } from './app/core/state/shopping-cart/cart.reducer';
 import { CartEffects } from './app/core/state/shopping-cart/cart.effects';
 import { ReviewModalReducer } from './app/core/state/modal/review/modal.reducer';
+import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 if (environment.production) {
   enableProdMode();
@@ -28,10 +31,20 @@ if (environment.production) {
   }
 }
 
-export function initializeApp(authStateService: AuthStateService) {
+
+
+export function initializeApp(authStateService: AuthStateService, translate: TranslateService) {
   return (): Promise<void> => {
-    return authStateService.initializeAuthState();
+    return new Promise<void>((resolve) => {
+      translate.setDefaultLang('en');
+      translate.use('en').subscribe(() => {
+        authStateService.initializeAuthState().then(() => resolve());
+      });
+    });
   };
+}
+export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
+  return new TranslateHttpLoader(http);
 }
 
 const initialReducers = {
@@ -45,16 +58,35 @@ const initialReducers = {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    importProvidersFrom(BrowserModule, AppRoutingModule, BrowserAnimationsModule, HttpClientModule),
+    importProvidersFrom(
+      BrowserModule,
+      AppRoutingModule,
+      BrowserAnimationsModule,
+      HttpClientModule,
+      TranslateModule.forRoot({
+        loader: {
+          provide: TranslateLoader,
+          useFactory: HttpLoaderFactory,
+          deps: [HttpClient],
+        },
+      })
+    ),
     provideAnimations(),
     provideToastr(),
-    provideStore(initialReducers),
+    provideStore({
+      userModals: userModalReducer,
+      orderModals: orderModalReducer,
+      reviewModals: ReviewModalReducer,
+      menuItemModals: menuItemsModalReducer,
+      auth: authReducer,
+      cart: cartReducer,
+    }),
     provideEffects([AuthEffects, CartEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
     {
       provide: APP_INITIALIZER,
-      useFactory: (authStateService: AuthStateService) => () => authStateService.initializeAuthState(),
-      deps: [AuthStateService],
+      useFactory: initializeApp,
+      deps: [AuthStateService, TranslateService],
       multi: true,
     },
     {
@@ -64,6 +96,7 @@ bootstrapApplication(AppComponent, {
     },
   ],
 }).catch((err) => console.error(err));
+
 
 function selfXSSWarning() {
   setTimeout(() => {
