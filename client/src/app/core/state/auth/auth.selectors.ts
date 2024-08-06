@@ -22,3 +22,11 @@ export const selectIsAuthenticated = createSelector(
   selectCurrentUser,
   (user) => !!user
 );
+
+export const selectIsUpdatingInfo = createSelector(
+  selectAuthState,
+  (state: AuthState) => state.isUpdatingInfo 
+);
+
+
+

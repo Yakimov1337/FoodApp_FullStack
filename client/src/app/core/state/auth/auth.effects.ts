@@ -7,6 +7,8 @@ import { catchError, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import * as AuthActions from './auth.actions';
 import { AuthService } from '../../../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
+import { UserService } from '../../../services/user.service';
+import { UserUpdate } from '../../models';
 
 @Injectable()
 export class AuthEffects {
@@ -14,6 +16,7 @@ export class AuthEffects {
     private actions$: Actions,
     private authService: AuthService,
     private router: Router,
+    private userService: UserService,
     private store: Store,
     private toastr: ToastrService,
   ) {}
@@ -56,6 +59,39 @@ export class AuthEffects {
       ),
     { dispatch: false },
   );
+
+  updateUserProfile$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.updateUserProfile),
+      switchMap((action) =>
+        this.userService.updateUser(action.id, action.user).pipe(
+          map((updatedUser) => AuthActions.updateUserProfileSuccess({ user: updatedUser })),
+          catchError((error) => of(AuthActions.updateUserProfileFailure({ error: error.message }))),
+        ),
+      ),
+    ),
+  );
+
+  updateUserProfileSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.updateUserProfileSuccess),
+      tap(({ user }) => {
+        this.toastr.success('User information updated successfully');
+      }),
+    ),
+    { dispatch: false }
+  );
+
+  updateUserProfileFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.updateUserProfileFailure),
+      tap(({ error }) => {
+        this.toastr.error('Failed to update user information: ' + error);
+      })
+    ),
+    { dispatch: false }
+  );
+
 
   restoreSessionSuccess$ = createEffect(() => this.actions$.pipe(ofType(AuthActions.restoreSessionSuccess)), {
     dispatch: false,

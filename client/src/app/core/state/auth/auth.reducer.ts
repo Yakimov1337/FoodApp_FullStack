@@ -7,6 +7,7 @@ export const initialState: AuthState = {
   user: null,
   error: null,
   isLoading: false,
+  isUpdatingInfo: false
 };
 // In auth.reducer.ts
 export const authReducer = createReducer(
@@ -30,5 +31,21 @@ export const authReducer = createReducer(
   on(AuthActions.logout, () => {
     console.log("Reducer handling logout"); // Debugging log
     return initialState;
-  })
+  }),
+  on(AuthActions.updateUserProfile, (state) => ({
+    ...state,
+    isUpdatingInfo: true,
+    error: null,
+  })),
+  on(AuthActions.updateUserProfileSuccess, (state, { user }) => ({
+    ...state,
+    user,
+    isUpdatingInfo: false,
+    error: null,
+  })),
+  on(AuthActions.updateUserProfileFailure, (state, { error }) => ({
+    ...state,
+    isUpdatingInfo: false,
+    error,
+  }))
 );

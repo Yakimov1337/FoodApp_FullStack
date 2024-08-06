@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { User } from '../../models';
+import { User, UserUpdate } from '../../models';
 
 export const login = createAction(
   '[Auth] Login',
@@ -12,3 +12,24 @@ export const logoutSuccess = createAction('[Auth] Logout Success');
 export const logoutFailure = createAction('[Auth] Logout Failure', props<{ error: string }>());
 // Add a new action for session restoration success
 export const restoreSessionSuccess = createAction('[Auth] Restore Session Success', props<{ user: User }>());
+
+//Profile update
+export const updateUserProfile = createAction(
+  '[Auth] Update User Profile',
+  props<{ id: string, user: UserUpdate }>()
+);
+export const updateUserProfileSuccess = createAction(
+  '[Auth] Update User Profile Success',
+  props<{ user: User }>()
+);
+
+export const updateUserProfileFailure = createAction(
+  '[Auth] Update User Profile Failure',
+  props<{ error: string }>()
+);
+
+export const updateCurrentUser = createAction(
+  '[Auth] Update Current User',
+  props<{ user: User }>()
+);
+
