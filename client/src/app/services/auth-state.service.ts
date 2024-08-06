@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import * as AuthActions from '../core/state/auth/auth.actions';
-import { Observable, map, of } from 'rxjs';
 import { AuthService } from './auth.service';
-import { User } from '../core/models';
 import { selectIsAuthenticated } from '../core/state/auth/auth.selectors';
+import { map, Observable, of, switchMap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -12,48 +11,35 @@ import { selectIsAuthenticated } from '../core/state/auth/auth.selectors';
 export class AuthStateService {
   constructor(private store: Store, private authService: AuthService) {}
 
-  // In AuthStateService
   initializeAuthState(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!this.checkAuthFallback()) {
-        resolve();
-        return;
-      }
-      this.authService.getCurrentUserSession().subscribe({
+    return new Promise((resolve) => {
+      this.authService.getCurrentUser().subscribe({
         next: (user) => {
-          if (user) {
-            this.store.dispatch(AuthActions.restoreSessionSuccess({ user: user as unknown as User }));
-          } else {
-            // this.store.dispatch(AuthActions.logout());
-          }
+          this.store.dispatch(AuthActions.restoreSessionSuccess({ user }));
           resolve();
         },
-        error: reject,
+        error: () => {
+          resolve();
+        },
       });
     });
   }
 
-  private checkAuthFallback(): boolean {
-    const cookieFallback = localStorage.getItem('cookieFallback');
-    return cookieFallback !== null && cookieFallback !== '[]';
-  }
-
-  // Checks if the user is authenticated
   isAuthenticated(): Observable<boolean> {
-    // First, check if the token exists in localStorage
-    const tokenExists = this.checkAuthFallback();
-
-    if (!tokenExists) {
-      // If the token doesn't exist, dispatch a logout action to update the state
-      // this.store.dispatch(AuthActions.logout());
-      return of(false);
-    }
-
-    // If the token exists, then proceed to check the NgRx store for the authentication state
-    return this.store.select(selectIsAuthenticated);
+    const accessToken = localStorage.getItem('accessToken');
+    return of(!!accessToken);
   }
 
   hasAnyRole(expectedRoles: string[]): Observable<boolean> {
-    return this.authService.getCurrentUserSession().pipe(map((user) => expectedRoles.includes(user?.role)));
+    return this.isAuthenticated().pipe(
+      switchMap(isAuthenticated => {
+        if (!isAuthenticated) {
+          return of(false);
+        }
+        return this.authService.getCurrentUser().pipe(
+          map(user => expectedRoles.includes(user.role))
+        );
+      })
+    );
   }
 }
