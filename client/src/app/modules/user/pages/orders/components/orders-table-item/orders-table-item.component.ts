@@ -4,7 +4,6 @@ import { AngularSvgIconModule } from 'angular-svg-icon';
 import { Order } from '../../../../../../core/models';
 import { ButtonComponent } from '../../../../../../shared/components/button/button.component';
 import { Store } from '@ngrx/store';
-import { openDeleteOrderModal, openUpdateOrderModal } from '../../../../../../core/state/modal/order/modal.actions';
 
 @Component({
   selector: '[orders-table-item]',
