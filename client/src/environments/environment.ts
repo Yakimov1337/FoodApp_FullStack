@@ -1,13 +1,14 @@
 export const environment = {
   production: false,
   stripePublishKey: 'yourStripeKey',
+  apiUrl: "http://localhost:8080/api",
   //Credentials
   adminCredentials: {
-    email: 'admin@admin.bg',
-    password: '123123123',
+    email: 'admin@example.com',
+    password: '123123',
   },
   moderatorCredentials: {
-    email: 'moderator@moderator.bg',
-    password: '123123123',
+    email: 'moderator@example.com',
+    password: '123123',
   },
 };
