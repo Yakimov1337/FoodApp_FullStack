@@ -13,7 +13,7 @@ export class CartService {
     this.store.dispatch(addItem({ item }));
   }
 
-  removeItem(itemId: string) {
+  removeItem(itemId: number) {
     this.store.dispatch(removeItem({ itemId }));
   }
 
