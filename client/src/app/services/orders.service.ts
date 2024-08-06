@@ -1,17 +1,19 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, from, Observable } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { Query } from 'appwrite';
-import { environment } from 'src/environments/environment.local';
-import { databases, ID } from '../core/lib/appwrite';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { BaseService } from './base.service';
 import { Order, OrderSubmission } from '../core/models';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../environments/environment.local';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
-export class OrdersService {
-  private readonly databaseId = environment.appwriteDatabaseId;
-  private readonly ordersCollectionId = environment.ordersCollectionId;
+export class OrdersService extends BaseService {
+  private readonly baseUrl = `${environment.apiUrl}/orders`;
+
   private orderCreatedSource = new BehaviorSubject<Order | null>(null);
   private orderUpdatedSource = new BehaviorSubject<Order | null>(null);
   private orderDeletedSource = new BehaviorSubject<string | undefined | null>(null);
@@ -21,106 +23,54 @@ export class OrdersService {
   orderDeleted$ = this.orderDeletedSource.asObservable();
   orderUpdated$ = this.orderUpdatedSource.asObservable();
 
-  constructor() {}
-  // Emit event when a order is created
+  constructor(http: HttpClient, router: Router, toastr: ToastrService) {
+    super(http, router, toastr);
+  }
+
+  // Emit event when an order is created
   orderCreated(order: Order): void {
     this.orderCreatedSource.next(order);
   }
 
-  // Emit event when a order is updated
+  // Emit event when an order is updated
   orderUpdated(order: Order): void {
-    this.orderCreatedSource.next(order);
+    this.orderUpdatedSource.next(order);
   }
 
-  // Emit event when a order is deleted
+  // Emit event when an order is deleted
   orderDeleted(orderId: string | undefined | null): void {
     this.orderDeletedSource.next(orderId);
   }
 
-  // Create an Order
   createOrder(orderData: OrderSubmission): Observable<Order> {
-    return from(databases.createDocument(this.databaseId, this.ordersCollectionId, ID.unique(), orderData)).pipe(
-      map((result) => result as unknown as Order),
-      catchError((error) => {
-        console.error('Error creating order:', error);
-        throw error;
-      }),
+    return this.post<Order>(`${this.baseUrl}`, orderData).pipe(
+      tap(order => this.orderCreated(order))
     );
   }
 
-  // Get all Orders
   getAllOrders(page: number = 1, limit: number = 10): Observable<Order[]> {
-    const offset = (page - 1) * limit;
-    return from(
-      databases.listDocuments(this.databaseId, this.ordersCollectionId, [
-        Query.limit(limit),
-        Query.offset(offset),
-        Query.orderDesc('$createdAt'),
-      ]),
-    ).pipe(
-      map((result) => {
-        if (!result) throw new Error('No result');
-        return result.documents as unknown as Order[];
-      }),
-      catchError((error) => {
-        console.error('Error fetching orders:', error);
-        throw error;
-      }),
-    );
+    const params = new HttpParams().set('page', (page - 1).toString()).set('size', limit.toString());
+    return this.get<Order[]>(this.baseUrl, params);
   }
 
-  // Get a single Order by ID
   getOrderById(orderId: string): Observable<Order> {
-    return from(databases.getDocument(this.databaseId, this.ordersCollectionId, orderId)).pipe(
-      map((result) => result as unknown as Order),
-      catchError((error) => {
-        console.error('Error fetching order:', error);
-        throw error;
-      }),
-    );
+    return this.get<Order>(`${this.baseUrl}/${orderId}`);
   }
 
-  // Update an Order
   updateOrder(orderId: string, orderData: Partial<Order>): Observable<Order> {
-    return from(databases.updateDocument(this.databaseId, this.ordersCollectionId, orderId, orderData)).pipe(
-      map((result) => result as unknown as Order),
-      catchError((error) => {
-        console.error('Error updating order:', error);
-        throw error;
-      }),
+    return this.put<Order>(`${this.baseUrl}/${orderId}`, orderData).pipe(
+      tap(order => this.orderUpdated(order))
     );
   }
 
-  // Delete an Order
   deleteOrder(orderId: string): Observable<void> {
-    return from(databases.deleteDocument(this.databaseId, this.ordersCollectionId, orderId)).pipe(
-      map(() => undefined), // Mapping to void
-      catchError((error) => {
-        console.error('Error deleting order:', error);
-        throw error;
-      }),
+    return this.delete<void>(`${this.baseUrl}/${orderId}`).pipe(
+      tap(() => this.orderDeleted(orderId))
     );
   }
 
-  // Fetch orders for a specific user
-  getOrdersByUserId(userId: string, page: number = 1, limit: number = 10): Observable<Order[]> {
-    const offset = (page - 1) * limit;
-    return from(
-      databases.listDocuments(this.databaseId, this.ordersCollectionId, [
-        Query.limit(limit),
-        Query.offset(offset),
-        Query.orderDesc('$createdAt'),
-        Query.equal('user', userId),
-      ]),
-    ).pipe(
-      map((result) => {
-        if (!result) throw new Error('No result');
-        return result.documents as unknown as Order[];
-      }),
-      catchError((error) => {
-        console.error('Error fetching orders for user:', error);
-        throw error;
-      }),
-    );
+  getOrdersByUserId(userId: string): Observable<Order[]> {
+    return this.get<Order[]>(`${this.baseUrl}/user/${userId}`);
   }
+
 }

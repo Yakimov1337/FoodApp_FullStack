@@ -1,17 +1,19 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, forkJoin, from, Observable, throwError } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
-import { Query } from 'appwrite';
-import { environment } from 'src/environments/environment.local';
-import { databases } from '../core/lib/appwrite';
-import { User } from '../core/models';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Role, User, UserUpdate } from '../core/models';
+import { BaseService } from './base.service';
+import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../environments/environment.local';
 
 @Injectable({
   providedIn: 'root',
 })
-export class UserService {
-  private readonly databaseId = environment.appwriteDatabaseId;
-  private readonly usersCollectionId = environment.userCollectionId;
+export class UserService extends BaseService {
+  private readonly baseUrl = `${environment.apiUrl}/users`;
+
   private userCreatedSource = new BehaviorSubject<User | null>(null);
   private userUpdatedSource = new BehaviorSubject<User | null>(null);
   private userDeletedSource = new BehaviorSubject<string | undefined | null>(null);
@@ -21,7 +23,10 @@ export class UserService {
   userUpdated$ = this.userUpdatedSource.asObservable();
   userDeleted$ = this.userDeletedSource.asObservable();
 
-  constructor() {}
+  constructor(http: HttpClient, router: Router, toastr: ToastrService) {
+    super(http, router, toastr);
+  }
+
   // Emit event when a user is created
   userCreated(user: User): void {
     this.userCreatedSource.next(user);
@@ -37,65 +42,58 @@ export class UserService {
     this.userDeletedSource.next(userId);
   }
 
-  // Create USER is delegated to Auth service because we need to create Appwrite account too!
-
   getAllUsers(page: number = 1, limit: number = 10): Observable<User[]> {
-    const offset = (page - 1) * limit;
-    return from(
-      databases.listDocuments(this.databaseId, this.usersCollectionId, [
-        Query.limit(limit),
-        Query.offset(offset),
-        Query.orderDesc('$createdAt'),
-      ]),
-    ).pipe(
-      map((result) => result.documents as unknown as User[]),
-      catchError((error) => {
-        console.error('Error fetching users:', error);
-        return throwError(() => error);
-      }),
+    const params = new HttpParams().set('page', (page - 1).toString()).set('limit', limit.toString());
+    return this.get<User[]>(this.baseUrl, params).pipe(
+      map(users => users.map(this.mapUser.bind(this)))
+    );
+  }
+
+  createUser(userData: User): Observable<User> {
+    return this.post<User>(`${this.baseUrl}`, userData).pipe(
+      tap(user => this.userCreated(user))
     );
   }
 
   getUserById(userId: string): Observable<User> {
-    return from(databases.getDocument(this.databaseId, this.usersCollectionId, userId)).pipe(
-      map((result) => result as unknown as User),
-      catchError((error) => {
-        console.error('Error fetching user:', error);
-        return throwError(() => error);
-      }),
+    return this.get<User>(`${this.baseUrl}/${userId}`).pipe(
+      map(this.mapUser.bind(this))
     );
   }
 
-  updateUser(userId: string, userData: Partial<User>): Observable<User> {
-    return from(databases.updateDocument(this.databaseId, this.usersCollectionId, userId, userData)).pipe(
-      map((result) => result as unknown as User),
-      catchError((error) => {
-        console.error('Error updating user:', error);
-        return throwError(() => error);
-      }),
+  updateUser(userId: string, userData: UserUpdate): Observable<User> {
+    return this.put<User>(`${this.baseUrl}/${userId}`, userData).pipe(
+      map(this.mapUser.bind(this)),
+      tap(result => this.userUpdated(result))
     );
   }
 
-  //Deleting user from both Appwrite Auth table and Custom Users table
-  deleteUser(documentId: string): Observable<any> {
-    // Step 1: Fetch the user document to get the accountId (Appwrite Auth ID)
-    return from(databases.getDocument(this.databaseId, this.usersCollectionId, documentId)).pipe(
-      switchMap((userDocument) => {
-        const accountId = userDocument['accountId'];
 
-        // Step 2: Delete the user from Appwrite Auth system using accountId
-        // const deleteAuthUser = from(account.deleteIdentity('65f8c54fd490d9cb9031'));
-
-        // Step 3: Delete the user document from my database
-        const deleteUserDocument = from(databases.deleteDocument(this.databaseId, this.usersCollectionId, documentId));
-
-        // Step 4: Execute both deletions in parallel and wait for both to complete
-        return forkJoin([deleteUserDocument]); //disabled deleteAuthUser for now
-      }),
-      catchError((error) => {
-        console.error('Error deleting user:', error);
-        return throwError(() => error);
-      }),
+  deleteUser(userId: string): Observable<void> {
+    return this.delete<void>(`${this.baseUrl}/${userId}`).pipe(
+      tap(() => this.userDeleted(userId))
     );
+  }
+
+  private mapRole(role: string): Role {
+    switch (role) {
+      case 'ADMIN':
+        return Role.Admin;
+      case 'MODERATOR':
+        return Role.Moderator;
+      case 'NORMAL':
+        return Role.Normal;
+      case 'SUPER_ADMIN':
+        return Role.SuperAdmin;
+      default:
+        return Role.Normal;
+    }
+  }
+
+  private mapUser(user: User): User {
+    return {
+      ...user,
+      role: this.mapRole(user.role),
+    };
   }
 }
