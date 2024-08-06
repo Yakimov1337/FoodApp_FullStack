@@ -1,26 +1,32 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { MenuItem } from '../../../../core/models';
+import { MenuItem, PaginatedResponseDTO } from '../../../../core/models';
 import { MenuItemsService } from '../../../../services/menuItems.service';
 import { FoodCardComponent } from './food-card/food-card.component';
 import { FoodCategoryComponent } from './food-category/food-category.component';
 import { LoaderComponent } from '../../../../shared/components/loader/loader.component';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { trigger, state, style, transition, animate } from '@angular/animations';
+import { debounceTime, distinctUntilChanged, Observable, Subscription, switchMap } from 'rxjs';
+import {
+  selectIsCreateReviewUserModalOpen,
+  selectIsUserReviewsModalOpen,
+} from '../../../../core/state/modal/review/modal.selectors';
+import { Store } from '@ngrx/store';
+import { UserReviewsModalComponent } from './user-reviews-modal/user-reviews-modal.component';
+import { SubmitUserReviewModal } from './submit-review-modal/submit-review-modal.component';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, FoodCardComponent, FoodCategoryComponent, LoaderComponent],
+  imports: [
+    CommonModule,
+    FoodCardComponent,
+    FoodCategoryComponent,
+    LoaderComponent,
+    SubmitUserReviewModal,
+    UserReviewsModalComponent,
+  ],
   templateUrl: './menu.component.html',
-  animations: [
-    trigger('fadeInOut', [
-      state('in', style({ opacity: 1 })),
-      transition(':enter', [style({ opacity: 0 }), animate('0.5s ease-in', style({ opacity: 1 }))]),
-      transition(':leave', [animate('0.5s ease-out', style({ opacity: 0 }))])
-    ]),
-  ]
 })
 export class MenuComponent implements OnInit, OnDestroy {
   @ViewChild('menuItemsContainer') menuItemsContainer?: ElementRef;
@@ -31,49 +37,75 @@ export class MenuComponent implements OnInit, OnDestroy {
   lastCategory: string = 'burger';
   itemsPerPage = 6; // Number of items to load
   currentPage = 1;
+  showSubmitReviewModal$!: Observable<boolean>;
+  showUserReviewsModal$!: Observable<boolean>;
 
   private queryParamsSubscription!: Subscription;
+  private reviewNotificationSubscription!: Subscription;
 
-  constructor(private menuItemsService: MenuItemsService, private route: ActivatedRoute) {}
+  constructor(private menuItemsService: MenuItemsService, private route: ActivatedRoute, private store: Store) {}
 
   ngOnInit(): void {
-    // Listen for any changes in the URL query parameters.
-    this.route.queryParams.subscribe((params) => {
-      // Check if the 'category' parameter from the URL has changed.
-      // 'categoryChanged' is true if there's a new category in the URL different from the current one.
-      const categoryChanged = params['category'] && this.selectedCategory !== params['category'];
+    this.showSubmitReviewModal$ = this.store.select(selectIsCreateReviewUserModalOpen);
+    this.showUserReviewsModal$ = this.store.select(selectIsUserReviewsModalOpen);
 
-      // If the category has changed or if not loaded any menu items yet,
-      // need to update our menu items based on the new category.
-      if (categoryChanged || !this.allMenuItems.length) {
-        // Set the selected category to the new one from the URL.
-        // If there's no category in the URL, keep the current category. (burger by default)
-        this.selectedCategory = params['category'] || this.selectedCategory;
-        this.fetchMenuItems();
-      }
+    // Listen for any changes in the URL query parameters
+    this.queryParamsSubscription = this.route.queryParams.pipe(
+      debounceTime(300), // Debounce to avoid rapid consecutive fetches
+      distinctUntilChanged(), // Only fetch if there is a change in category
+      switchMap(params => {
+        const category = params['category'] || 'burger';
+        const categoryChanged = this.selectedCategory !== category;
+
+        // Update selected category and fetch items if necessary
+        if (categoryChanged || !this.allMenuItems.length) {
+          this.selectedCategory = category;
+          return this.menuItemsService.getAllMenuItems(1, 100);
+        } else {
+          return [];
+        }
+      })
+    ).subscribe({
+      next: (response: PaginatedResponseDTO<MenuItem>) => {
+        if (response.items) {
+          this.allMenuItems = response.items;
+          this.filterItemsByCategory();
+          this.isLoading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Failed to fetch menu items', error);
+        this.isLoading = false;
+      },
+    });
+
+    // Listen for review submission notifications
+    this.reviewNotificationSubscription = this.menuItemsService.reviewSubmitted$.subscribe(() => {
+      this.fetchMenuItems(true);
     });
   }
 
-  fetchMenuItems(): void {
-    if (!this.allMenuItems.length) {
-      // Check if items have already been fetched
-      this.isLoading = true;
-      this.menuItemsService.getAllMenuItems(1, 100).subscribe({
-        next: (items) => {
-          this.allMenuItems = items; // Saving all items then only filter based on selected category
-          // Filter immediately after fetching based on the selected category
-          this.filterItemsByCategory();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Failed to fetch menu items', error);
-          this.isLoading = false;
-        },
-      });
-    } else {
-      this.filterItemsByCategory(); // Filter existing items if they've already been fetched
-    }
+
+fetchMenuItems(forceFetch: boolean = false): void {
+  if (!this.allMenuItems.length || forceFetch) {
+    // Check if items have already been fetched or force fetching
+    this.isLoading = true;
+    this.menuItemsService.getAllMenuItems(1, 100).subscribe({
+      next: (response: PaginatedResponseDTO<MenuItem>) => {
+        this.allMenuItems = response.items; // Saving all items then only filter based on selected category
+        // Filter immediately after fetching based on the selected category
+        this.filterItemsByCategory();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to fetch menu items', error);
+        this.isLoading = false;
+      },
+    });
+  } else {
+    this.filterItemsByCategory(); // Filter existing items if they've already been fetched
   }
+}
 
   filterItemsByCategory(): void {
     // w/o this, while changing categories displayItems count will be same until page refresh
@@ -112,5 +144,6 @@ export class MenuComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Unsubscribe to prevent memory leaks
     this.queryParamsSubscription?.unsubscribe();
+    this.reviewNotificationSubscription?.unsubscribe();
   }
 }

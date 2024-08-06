@@ -1,4 +1,4 @@
-<div class="bg-white dark:bg-background"  @fadeInOut>
+<div class="bg-white dark:bg-background">
   <!-- FOOD CATEGORIES TO PICK -->
   <app-food-category ></app-food-category>
 
@@ -6,6 +6,7 @@
   <div *ngIf="isLoading" class="flex justify-center items-center p-48">
    <app-loader/>
  </div>
+
   <!-- Menu Items Display -->
   <div  class="container mx-auto px-2 pb-24 pt-4 overflow-auto">
     <!-- Menu Items Display -->
@@ -18,3 +19,9 @@
       </div>
   </div>
 </div>
+  <!-- Submit Review Modal -->
+  <app-submit-review-modal *ngIf="showSubmitReviewModal$ | async"></app-submit-review-modal>
+
+  <!-- Users Review Modal -->
+  <app-user-reviews-modal *ngIf="showUserReviewsModal$ | async"></app-user-reviews-modal>
+
