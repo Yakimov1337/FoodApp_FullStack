@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  stripePublishKey: 'youStripePublishKey',
   apiUrl: "http://deployDomain:8080/api",
   //Credentials
   adminCredentials: {
