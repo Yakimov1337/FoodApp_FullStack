@@ -9,6 +9,8 @@ import { addItem } from '../../../../../core/state/shopping-cart/cart.actions';
 import { ToastrService } from 'ngx-toastr';
 import { selectCartItems } from '../../../../../core/state/shopping-cart/cart.selectors';
 import { map, take } from 'rxjs';
+import { openCreateReviewUserModal, openUsersReviewModal } from '../../../../../core/state/modal/review/modal.actions';
+import { CartVisibilityService } from '../../../../../services/cart-visibility.service';
 
 @Component({
   selector: 'app-food-card',
@@ -29,7 +31,7 @@ export class FoodCardComponent {
   imageLoaded= false;
   showFullDescription = false;
 
-  constructor(private store: Store,private toastr:ToastrService) {}
+  constructor(private store: Store,private toastr:ToastrService, private cartVisibility: CartVisibilityService) {}
 
   ngOnInit(): void {}
 
@@ -41,11 +43,20 @@ export class FoodCardComponent {
     this.showFullDescription = !this.showFullDescription;
   }
 
+
+  openReviewModal(itemId: number): void {
+    this.store.dispatch(openCreateReviewUserModal({ itemId }));
+  }
+
+  openUserReviewsModal(itemId: number): void {
+    this.store.dispatch(openUsersReviewModal({ itemId }));
+  }
+
   addToCart(item: MenuItem): void {
     this.store.select(selectCartItems).pipe(
       take(1), // Take the first item only and automatically unsubscribe, prevents duplicates in cart
       map((items: MenuItem[]) => {
-        const exists = items.some(existingItem => existingItem.$id === item.$id);
+        const exists = items.some(existingItem => existingItem.id === item.id);
         if (exists) {
           this.toastr.info('Item is already added','', {
             positionClass: 'custom-toast-top-right',

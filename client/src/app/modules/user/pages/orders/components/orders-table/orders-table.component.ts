@@ -30,8 +30,8 @@ export class OrdersTableComponent implements OnInit {
     this.store.pipe(
       select(selectCurrentUser), // Use the selector to get the current user object
       switchMap(user => {
-        if (user && user.$id) { // Ensure the user object and its id are not undefined
-          return this.ordersService.getOrdersByUserId(user.$id); // Fetch orders for the user by ID
+        if (user && user.id) { // Ensure the user object and its id are not undefined
+          return this.ordersService.getOrdersByUserId(user.id); // Fetch orders for the user by ID
         } else {
           // Optionally handle the case where user or user.id is undefined
           return [];
