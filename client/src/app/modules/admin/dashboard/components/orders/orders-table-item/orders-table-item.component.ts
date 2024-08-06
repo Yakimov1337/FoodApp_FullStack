@@ -22,13 +22,13 @@ export class OrdersTableItemComponent implements OnInit {
     this.currentUser$ = this.store.pipe(select(selectCurrentUser));
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {console.log(this.order.id)}
 
   openUpdateModal() {
     this.store.dispatch(openUpdateOrderModal({ order: this.order }));
   }
 
   openDeleteModal() {
-    this.store.dispatch(openDeleteOrderModal({ orderId: this.order.$id }));
+    this.store.dispatch(openDeleteOrderModal({ orderId: this.order.id }));
   }
 }

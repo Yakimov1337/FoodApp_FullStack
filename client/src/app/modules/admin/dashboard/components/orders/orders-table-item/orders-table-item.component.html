@@ -5,7 +5,7 @@
       class="mr-2 h-10 w-10 flex-none rounded-md p-0.5 dark:bg-white"
       alt="" />
     <div class="flex min-w-0 flex-col justify-items-start">
-      <a href="#" class="mb-1 truncate text-sm font-semibold text-foreground">{{ order.$id }}</a>
+      <a href="#" class="mb-1 truncate text-sm font-semibold text-foreground">{{ order.id }}</a>
       <span class="truncate text-xs font-semibold text-muted-foreground/50">{{ order.totalCost | currency }}</span>
     </div>
   </div>
@@ -15,9 +15,9 @@
     <span
       class="min-w-[96px] rounded-md p-1.5 text-sm font-semibold text-white"
       [ngClass]="{
-        'bg-yellow-500/70': order.status === 'pending',
-        'bg-green-500/70 ': order.status === 'completed',
-        'bg-red-500/70 ': order.status === 'cancelled'
+        'bg-yellow-500/70': order.status === 'PENDING',
+        'bg-green-500/70 ': order.status === 'COMPLETED',
+        'bg-red-500/70 ': order.status === 'CANCELLED'
       }"
       >{{ order.status }}</span
     >
@@ -29,7 +29,7 @@
 <td class="py-2 text-center">
   <div class="inline-block">
     <app-button impact="light" tone="success" shape="rounded" size="medium">
-      {{ order.totalCost | currency: 'USD':'symbol':'1.0-0' }}
+      {{ order.totalCost | currency: 'USD' }}
     </app-button>
   </div>
 </td>
@@ -42,7 +42,7 @@
   </div>
 </td>
 <td class="py-2 text-center">
-  <span class="text-sm font-semibold text-muted-foreground">{{ order.user.email }}</span>
+  <span class="text-sm truncate font-semibold text-muted-foreground">{{ order.userEmail }}</span>
 </td>
 <td class="py-2 text-center">
   <div class="flex justify-end gap-4">
