@@ -19,16 +19,14 @@ export class MenuItemOverviewTableItemComponent implements OnInit {
   @Input() menuItem: MenuItem = <MenuItem>{};
   constructor(private store: Store) {}
 
-  ngOnInit(): void {
-    console.log();
-  }
+  ngOnInit(): void {}
 
   openUpdateModal() {
     this.store.dispatch(openUpdateMenuItemModal({ menuItem: this.menuItem }));
   }
 
   openDeleteModal() {
-    this.store.dispatch(openDeleteMenuItemModal({ menuItemId: this.menuItem.$id }));
+    this.store.dispatch(openDeleteMenuItemModal({ menuItemId: this.menuItem.id }));
   }
 
   truncateDescription(description: string, maxLength: number = 25): string {
