@@ -1,9 +1,9 @@
 import { Observable, Subscription, interval, startWith, switchMap } from 'rxjs';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MenuItemAuctionsTableItemComponent } from '../menuItem-auctions-table-item/menuItem-auctions-table-item.component';
 import { CommonModule, NgFor } from '@angular/common';
 import { MenuItemsService } from '../../../../../../services/menuItems.service';
-import { MenuItem } from '../../../../../../core/models';
+import { MenuItem, PaginatedResponseDTO } from '../../../../../../core/models';
 import { LoaderComponent } from '../../../../../../shared/components/loader/loader.component';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { ButtonComponent } from '../../../../../../shared/components/button/button.component';
@@ -12,6 +12,7 @@ import { Store } from '@ngrx/store';
 import { PaginationComponent } from '../../../../../../shared/components/pagination/pagination.component';
 import { ToastrService } from 'ngx-toastr';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: '[menuItem-auctions-table]',
@@ -25,7 +26,7 @@ import { FormsModule } from '@angular/forms';
     CommonModule,
     LoaderComponent,
     PaginationComponent,
-    FormsModule
+    FormsModule,
   ],
 })
 export class MenuItemAuctionsTableComponent implements OnInit {
@@ -39,13 +40,29 @@ export class MenuItemAuctionsTableComponent implements OnInit {
   public priceSortDirection: string = '';
   public defaultFilter: string = 'all';
   public originalMenuItems: MenuItem[] = [];
+  selectedItemIds: Set<number> = new Set<number>();
 
   private subscriptions: Subscription = new Subscription();
 
-  constructor(private menuItemsService: MenuItemsService, private store: Store, private toastr: ToastrService) {}
+  constructor(
+    private menuItemsService: MenuItemsService,
+    private store: Store,
+    private toastr: ToastrService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private cdRef: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.loadMenuItems(this.currentPage);
+    this.route.queryParams.subscribe((params) => {
+      this.currentPage = +params['page'] || 1;
+      this.categoryFilter = params['category'] || '';
+      this.priceSortDirection = params['sort'] || '';
+      this.defaultFilter = params['default'] || 'all';
+
+      this.loadMenuItems(this.currentPage);
+    });
+
     this.initializeSubscriptions();
     this.initializeTimeSinceLastUpdate();
   }
@@ -54,19 +71,33 @@ export class MenuItemAuctionsTableComponent implements OnInit {
     this.subscriptions.unsubscribe();
   }
 
-  loadMenuItems(page: number, limit: number = 10): void {
+  loadMenuItems(
+    page: number,
+    limit: number = 10,
+    categoryFilter: string = this.categoryFilter,
+    isDefault: string = this.defaultFilter,
+    priceSortDirection: string = this.priceSortDirection,
+  ): void {
     this.isLoading = true;
-    this.menuItemsService.getAllMenuItems(page, limit).subscribe({
-      next: (menuItems) => {
-        this.originalMenuItems = menuItems;
+
+    this.menuItemsService.getAllMenuItems(page, limit, categoryFilter, isDefault, priceSortDirection).subscribe({
+      next: (response: PaginatedResponseDTO<MenuItem>) => {
+        this.originalMenuItems = response.items;
         this.menuItems = [...this.originalMenuItems]; // Copy for display purposes
-        this.totalPages = Math.ceil(100 / limit); //change later
+        this.totalPages = Math.ceil(response.totalCount / limit);
         this.isLoading = false;
       },
       error: (error) => {
         this.toastr.error('Error fetching items:', error);
         this.isLoading = false;
       },
+    });
+
+    // Update URL query parameters
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { page, category: categoryFilter, sort: priceSortDirection, default: isDefault },
+      queryParamsHandling: 'merge',
     });
   }
 
@@ -95,34 +126,95 @@ export class MenuItemAuctionsTableComponent implements OnInit {
   private initializeSubscriptions(): void {
     const menuItemsCreatedSub = this.menuItemsService.menuItemCreated$.subscribe((menuItem) => {
       if (menuItem) {
-        this.loadMenuItems(this.currentPage); // Refetch items after a new item is created
+        this.loadMenuItems(this.currentPage);
+        // this.menuItems.unshift(menuItem);
       }
     });
-    const menuItemsDeletedSub = this.menuItemsService.menuItemDeleted$.subscribe((deleteMenuItemId) => {
-      if (deleteMenuItemId) {
-        this.menuItems = this.menuItems.filter((menuItem) => menuItem.$id !== deleteMenuItemId);
+
+    const menuItemsUpdatedSub = this.menuItemsService.menuItemUpdated$.subscribe((updatedMenuItem) => {
+      if (updatedMenuItem) {
+        this.loadMenuItems(this.currentPage);
+        // const index = this.menuItems.findIndex(menuItem => menuItem.id === updatedMenuItem.id);
+        // if (index !== -1) {
+        //   this.menuItems[index] = updatedMenuItem; // Update the menu item in the list
+        // }
       }
     });
+
+    const menuItemsDeletedSub = this.menuItemsService.menuItemDeleted$.subscribe((deletedMenuItemId) => {
+      this.menuItems = this.menuItems.filter((item) => item.id !== deletedMenuItemId);
+    });
+
     this.subscriptions.add(menuItemsCreatedSub);
+    this.subscriptions.add(menuItemsUpdatedSub);
     this.subscriptions.add(menuItemsDeletedSub);
   }
 
   applyFiltersAndSorting(): void {
-    let filteredItems = [...this.originalMenuItems]; // Start with a copy of the original
-
-    if (this.categoryFilter && this.categoryFilter !== 'All') {
-      filteredItems = filteredItems.filter(item => item.category === this.categoryFilter);
-    }
-
-    if (this.defaultFilter !== 'all') {
-      const isDefault = this.defaultFilter === 'yes';
-      filteredItems = filteredItems.filter(item => item.default === isDefault);
-    }
-
-    if (this.priceSortDirection) {
-      filteredItems.sort((a, b) => this.priceSortDirection === 'asc' ? a.price - b.price : b.price - a.price);
-    }
-
-    this.menuItems = filteredItems; // Update menuItems for display
+    this.loadMenuItems(this.currentPage, 10, this.categoryFilter, this.defaultFilter, this.priceSortDirection);
   }
+
+  isSelected(id: number): boolean {
+    return this.selectedItemIds.has(id);
+  }
+
+  onToggleSelection(id: number): void {
+    if (this.selectedItemIds.has(id)) {
+      this.selectedItemIds.delete(id);
+    } else {
+      this.selectedItemIds.add(id);
+    }
+  }
+
+  toggleAllSelection(): void {
+    const allSelected = this.isAllSelected();
+    console.log('Current selection state:', allSelected ? 'All Selected' : 'Not All Selected');
+
+    if (allSelected) {
+      console.log('Deselecting all items');
+      this.selectedItemIds.clear();
+    } else {
+      console.log('Selecting all items');
+      this.menuItems.forEach(item => this.selectedItemIds.add(item.id));
+    }
+
+    console.log('Selected item IDs:', Array.from(this.selectedItemIds));
+     this.cdRef.detectChanges();
+  }
+
+  isAllSelected(): boolean {
+    return this.menuItems.length > 0 && this.menuItems.every((item) => this.selectedItemIds.has(item.id));
+  }
+
+  trackById(index: number, item: MenuItem): number {
+    return item.id;
+  }
+
+  getSelectedItemIds(): number[] {
+    return Array.from(this.selectedItemIds);  // Converts Set<number> to number[]
+  }
+
+  // Function to delete all selected items
+  deleteAllItems(): void {
+    const idsToDelete = Array.from(this.selectedItemIds);
+    if (idsToDelete.length === 0) {
+      // No items selected, show error
+      this.toastr.error('Please select at least one item to delete.');
+      return;
+    }
+
+    // Items are selected, proceed with deletion
+    this.menuItemsService.deleteMenuItemsByIds(idsToDelete).subscribe({
+      next: () => {
+        this.toastr.success('All selected items deleted successfully');
+        this.selectedItemIds.clear();
+        this.loadMenuItems(this.currentPage);
+      },
+      error: (error) => {
+        this.toastr.error('Error deleting items:', error);
+      }
+    });
+  }
+
+
 }
