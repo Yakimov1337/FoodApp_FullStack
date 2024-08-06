@@ -55,6 +55,11 @@ export class ProfileMenuComponent implements OnInit {
       link: '/orders',
     },
     {
+      title: 'My reviews',
+      icon: './assets/icons/heroicons/outline/star.svg',
+      link: '/reviews',
+    },
+    {
       title: 'Log out',
       icon: './assets/icons/heroicons/outline/logout.svg',
       link: '/auth',
