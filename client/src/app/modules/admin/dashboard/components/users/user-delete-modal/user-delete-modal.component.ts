@@ -38,7 +38,7 @@ export class UserDeleteModalComponent {
         this.closeModal();
         this.userService.userDeleted(this.userIdToDelete);
       },
-      error: (error) =>  this.toastr.error('Error ocurred while deleting this user!')
+      error: (error) =>  this.toastr.error('Error ocurred while deleting this user!',error)
     });
   }
 

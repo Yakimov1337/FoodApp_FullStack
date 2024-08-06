@@ -49,7 +49,7 @@ export class UserUpdateModalComponent {
       console.log(user);
       if (user) {
         console.log(user.role)
-        this.currentUserId = user.$id;
+        this.currentUserId = user.id;
         this.userForm.patchValue({
           email: user.email,
           name: user.name,
@@ -63,7 +63,12 @@ export class UserUpdateModalComponent {
 
   updateUser(): void {
     if (this.userForm.valid && this.currentUserId) {
-      this.userService.updateUser(this.currentUserId, this.userForm.value).subscribe({
+      const userData = {
+        ...this.userForm.getRawValue(),
+        role: this.userForm.get('role')?.value.toUpperCase(),
+        email: this.userForm.get('email')?.value //  email included
+      };
+      this.userService.updateUser(this.currentUserId, userData).subscribe({
         next: (user) => {
           this.closeModal();
           this.userService.userUpdated(user); //Notify about user update

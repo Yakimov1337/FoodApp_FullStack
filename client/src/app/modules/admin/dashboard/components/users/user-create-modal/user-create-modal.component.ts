@@ -29,20 +29,25 @@ export class UserCreateModalComponent {
   ) {
     this.currentUser$ = this.store.pipe(select(selectCurrentUser));
     this.userForm = this.fb.group({
-      email: ['', [Validators.required,  Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      name: [''],
-      role: ['Normal', Validators.required],
-      phoneNumber: ['', Validators.pattern(/^\+?[0-9]{1,3}?[-\s]?([0-9]{1,4}[-\s]?)*$/)],
-      imageUrl: [''],
+      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: [''],
+      // name: [''],
+      // role: ['Normal', Validators.required],
+      // phoneNumber: ['', Validators.pattern(/^\+?[0-9]{1,3}?[-\s]?([0-9]{1,4}[-\s]?)*$/)],
+      // imageUrl: [''],
     });
   }
 
   // Function to handle form submission
   createUser(): void {
     if (this.userForm.valid) {
-      console.log(this.userForm.value)
-      this.authService.createUserAccount(this.userForm.value).subscribe({
+      const userData = {
+        ...this.userForm.value,
+        confirmPassword: this.userForm.value.password, // Automatically set confirmPassword to match password
+      };
+      console.log(userData);
+      this.userService.createUser(userData).subscribe({
         next: (user: User) => {
           this.closeModal();
           this.resetForm(); // Reset form to default state after creation
@@ -51,13 +56,7 @@ export class UserCreateModalComponent {
           this.toastr.success('User created successfully!');
         },
         error: (error: any) => {
-          let errorMessage = 'Error creating user!';
-          if (error.response && error.response.code === 409) {
-            errorMessage = 'Email already exists. Please use a different email!';
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-          this.toastr.error(errorMessage);
+          this.toastr.error(error);
         },
       });
     } else {

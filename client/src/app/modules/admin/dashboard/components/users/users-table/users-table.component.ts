@@ -99,7 +99,7 @@ export class UsersTableComponent implements OnInit, OnDestroy {
 
     const userDeletedSub = this.userService.userDeleted$.subscribe((userId) => {
       if (userId) {
-        this.loadUsers(this.currentPage); // Refetch users after a user is deleted
+        this.users = this.users.filter((user) => user.id !== userId);
       }
     });
 

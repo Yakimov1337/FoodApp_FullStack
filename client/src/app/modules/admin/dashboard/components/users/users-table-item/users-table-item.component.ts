@@ -34,6 +34,6 @@ export class UsersTableItemComponent implements OnInit {
   }
 
   openDeleteModal() {
-    this.store.dispatch(openDeleteUserModal({ userId: this.user.$id }));
+    this.store.dispatch(openDeleteUserModal({ userId: this.user.id }));
   }
 }
