@@ -108,7 +108,7 @@ export class ProfileMenuComponent implements OnInit {
     this.store.dispatch(AuthActions.logout());
   }
   public onMenuItemClick(item: any): void {
-    if (item.title === 'Log out') {
+    if (item.key === 'PROFILE_MENU.LOGOUT') {
       this.logout();
     } else {
       this.router.navigate([item.link]);
