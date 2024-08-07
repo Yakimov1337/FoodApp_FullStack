@@ -5,7 +5,7 @@ entities, and their functionalities.
 
 ## 🌍 Live Deployment
 
-- **Deployment**: [koyeb](https://regulatory-lucy-foodsquad-99da1125.koyeb.app/swagger-ui/index.html#)
+- **Deployment**: [Render](https://foodsquad-api-1.onrender.com/swagger-ui/index.html#/)
 
 ### Backend Setup
 
