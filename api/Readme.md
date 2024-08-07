@@ -3,6 +3,10 @@
 Welcome to the backend documentation for **Food Squad**. This documentation provides details about the API endpoints,
 entities, and their functionalities.
 
+## 🌍 Live Deployment
+
+- **Deployment**: [koyeb](https://regulatory-lucy-foodsquad-99da1125.koyeb.app/swagger-ui/index.html#)
+
 ### Backend Setup
 
 1. **Clone the Repository**
