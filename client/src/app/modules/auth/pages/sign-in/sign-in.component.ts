@@ -44,15 +44,13 @@ export class SignInComponent implements OnInit {
   // Admin Login
   loginAsAdmin() {
     this.isLoadingAdmin = true;
-    const { email, password } = environment.adminCredentials;
-    this.login(email, password, 'admin');
+    this.login("admin@example.com", "123123", 'admin');
   }
 
   // Moderator Login
   loginAsModerator() {
     this.isLoadingModerator = true;
-    const { email, password } = environment.moderatorCredentials;
-    this.login(email, password, 'moderator');
+    this.login("moderator@example.com", "123123", 'moderator');
   }
 
   // Normal User Login
