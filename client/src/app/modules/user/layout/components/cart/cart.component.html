@@ -10,7 +10,7 @@
 <div
   [@slideInOut]="showCart ? 'in' : 'out'"
   *ngIf="cartItems"
-  class="w-1/5 dark:bg-gray-800 fixed inset-y-0 right-0 z-50 transform overflow-y-auto bg-white shadow-lg"
+  class="w-4/6 md:w-1/5 dark:bg-gray-800 fixed inset-y-0 right-0 z-50 transform overflow-y-auto bg-white shadow-lg"
   (click)="$event.stopPropagation()"
 >
   <div class="text-gray-900 p-4 dark:text-gray-100">
