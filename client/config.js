@@ -5,22 +5,18 @@ const path = require('path');
 // Define the path to the environment file
 const targetPath = path.join(__dirname, './src/environments/environment.prod.ts');
 
-// Parse the JSON strings from environment variables
-const adminCredentials = JSON.parse(process.env.adminCredentials);
-const moderatorCredentials = JSON.parse(process.env.moderatorCredentials);
-
 // Environment file content, ensuring the variable names match your Vercel setup
 const envConfigFile = `export const environment = {
   production: true,
   apiUrl: '${process.env.apiUrl}',
   stripePublishKey: '${process.env.stripePublishKey}',
-  adminCredentials: {
-    email: '${adminCredentials.email}',
-    password: '${adminCredentials.password}',
+    adminCredentials: {
+    email: '${process.env.adminCredentials.email}',
+    password: '${process.env.adminCredentials.password}',
   },
   moderatorCredentials: {
-    email: '${moderatorCredentials.email}',
-    password: '${moderatorCredentials.password}',
+    email: '${process.env.moderatorCredentials.email}',
+    password: '${process.env.moderatorCredentials.password}',
   },
 };
 `;
