@@ -41,6 +41,7 @@ public class UserResponseDTO {
     @Schema(description = "Number of orders placed by the user", example = "10")
     private long ordersCount;
 
+
     public UserResponseDTO() {
         // Default constructor
     }
@@ -101,6 +102,12 @@ public class UserResponseDTO {
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
+
+    public long getOrdersCount() {
+        return ordersCount;
+    }
+
+
     public void setOrdersCount(long ordersCount) {
         this.ordersCount = ordersCount;
     }
