@@ -5,7 +5,7 @@ entities, and their functionalities.
 
 ## 🌍 Live Deployment
 
-- **Deployment**: [Render](https://foodsquad-api-1.onrender.com/swagger-ui/index.html#/)
+- **Deployment**: [gm-apps](https://gm-apps.dev/swagger-ui/index.html#)
 
 ### Backend Setup
 
