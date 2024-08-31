@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -138,22 +139,34 @@ public class AuthController {
 
     @Operation(summary = "Get current user", description = "Get the details of the currently authenticated user.")
     @GetMapping("/current-user")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String accessTokenHeader) {
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+        String accessTokenHeader = request.getHeader("Authorization");
+
+        // Check if the Authorization header is missing or does not start with "Bearer "
+        if (accessTokenHeader == null || !accessTokenHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Missing or invalid Authorization header"));
+        }
+
+        // Extract the actual token from the header
         String accessToken = accessTokenHeader.replace("Bearer ", "");
         String email;
+
         try {
             email = jwtUtil.extractClaims(accessToken).getSubject();
         } catch (ExpiredJwtException e) {
             logger.error("Access token is expired: {}", accessToken);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Access token is expired"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Access token is expired"));
         } catch (JwtException e) {
             logger.error("Failed to extract claims from access token: {}", accessToken);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Failed to extract claims from access token"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Failed to extract claims from access token"));
         }
 
         User user = authService.loadUserEntityByUsername(email);
         UserResponseDTO userResponseDTO = new UserResponseDTO(user);
+
         return ResponseEntity.ok(userResponseDTO);
     }
-
 }
